@@ -1,0 +1,7 @@
+fastapi
+langgraph
+langchain-core
+langchain-openai
+uvicorn
+python-dotenv
+web3>=6.0,<7.0

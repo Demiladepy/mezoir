@@ -150,4 +150,106 @@ Built during the Mezo Hackathon 2026, April–May 2026. Currently on Mezo Matsne
 ## Acknowledgements
 
 Mezoir is built on primitives shipped by the Mezo team and community: Matchbox, the matching market, veBTC and veMEZO. It routes votes to Boar Finance's gauge as one of its strategies. Special thanks to Rod, Pyke, and the Mezo team for direct guidance during the build.
+
+---
+
+## Getting Started (Day 1)
+
+### 1) Contracts (`contracts/`)
+
+Create env file:
+
+```bash
+cp .env.example .env
+```
+
+Required envs in `contracts/.env`:
+
+- `MATSNET_RPC_URL`
+- `DEPLOYER_PRIVATE_KEY` (hex, no 0x prefix for `vm.envUint`)
+- `INITIAL_GREETING` (example: `hello mezoir`)
+
+Foundry setup (recommended, local install):
+
+```bash
+./tools/foundry/forge.exe build
+./tools/foundry/forge.exe script script/DeployHelloMezoir.s.sol:DeployHelloMezoir \
+  --rpc-url $MATSNET_RPC_URL \
+  --sender <YOUR_WALLET_ADDRESS> \
+  --broadcast
+```
+
+Optional Matsnet smoke transaction (self-transfer with cast):
+
+```bash
+./tools/foundry/cast.exe send <YOUR_WALLET_ADDRESS> --value 1wei \
+  --rpc-url $MATSNET_RPC_URL \
+  --private-key $DEPLOYER_PRIVATE_KEY
+```
+
+PowerShell variant:
+
+```powershell
+$env:MATSNET_RPC_URL="<your_boar_rpc_url>"
+$env:DEPLOYER_PRIVATE_KEY="<your_private_key_no_0x_prefix>"
+$env:INITIAL_GREETING="hello mezoir"
+./tools/foundry/forge.exe build
+./tools/foundry/forge.exe script script/DeployHelloMezoir.s.sol:DeployHelloMezoir --rpc-url $env:MATSNET_RPC_URL --sender <YOUR_WALLET_ADDRESS> --broadcast
+./tools/foundry/cast.exe send <YOUR_WALLET_ADDRESS> --value 1wei --rpc-url $env:MATSNET_RPC_URL --private-key $env:DEPLOYER_PRIVATE_KEY
+```
+
+### 2) Agent service (`agent/`)
+
+Create env file and install deps:
+
+```bash
+cp .env.example .env
+python -m venv .venv
+.venv/Scripts/python -m pip install -r requirements.txt
+```
+
+Run server:
+
+```bash
+.venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Smoke test:
+
+```bash
+curl http://127.0.0.1:8000/health
+curl -X POST http://127.0.0.1:8000/echo -H "Content-Type: application/json" -d "{\"text\":\"hello mezoir\"}"
+```
+
+### 3) Web app (`web/`)
+
+Create env file:
+
+```bash
+cp .env.example .env
+```
+
+Set:
+
+- `NEXT_PUBLIC_APP_NAME=Mezoir`
+- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<your_project_id>`
+
+Install and run:
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000` and click `Connect Wallet`.
+
+### 4) Day 1 validation checklist
+
+- [x] Repo skeleton created and pushed
+- [x] Agent scaffold runs (`/health`, `/echo`)
+- [x] Web scaffold runs with Mezo Passport connect UI
+- [ ] Matsnet faucet funding (manual, wallet-specific)
+- [ ] Matsnet explorer balance verification (manual)
+- [ ] Live Matsnet smoke transaction hash recorded
+- [ ] Foundry deploy to Matsnet executed with local credentials
 ```
