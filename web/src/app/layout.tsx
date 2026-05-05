@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mezoir",
-  description: "Intent-based execution for Mezo",
+  title: "Mezoir — Intent-based agent for Mezo",
+  description:
+    "Tell the agent your goal. It picks the venue and acts.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
