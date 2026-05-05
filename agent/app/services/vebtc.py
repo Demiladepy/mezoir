@@ -20,27 +20,12 @@ from web3.middleware import ExtraDataToPOAMiddleware
 RPC_URL = os.getenv("MEZO_TESTNET_RPC_URL", "https://rpc.test.mezo.org")
 CHAIN_ID = int(os.getenv("MEZO_TESTNET_CHAIN_ID", "31611"))
 VEBTC_PROXY = os.getenv("VEBTC_PROXY_ADDRESS", "0xB63fcCd03521Cf21907627bd7fA465C129479231")
-BTC_TOKEN_ADDRESS = "0x7b7C000000000000000000000000000000000000"
 OPERATOR_PK = os.getenv("AGENT_OPERATOR_PRIVATE_KEY", "")
 
 # ---- ABI loading ----
 ABI_PATH = Path(__file__).parent.parent / "abis" / "vebtc.json"
 with open(ABI_PATH) as f:
     VEBTC_ABI = json.load(f)
-
-ERC20_APPROVE_ABI = [
-    {
-        "inputs": [
-            {"internalType": "address", "name": "spender", "type": "address"},
-            {"internalType": "uint256", "name": "value", "type": "uint256"},
-        ],
-        "name": "approve",
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    }
-]
-
 
 class LockResult(TypedDict):
     tx_hash: str
@@ -78,32 +63,14 @@ def lock_btc(amount_btc: float, duration_days: int) -> LockResult:
     # Use floor + WEEK to guarantee we're above the requested duration after rounding
     unlock_time = (raw_unlock // WEEK) * WEEK + WEEK
 
-    # Step 1: approve the veBTC contract to pull BTC via the precompile
-    btc_token = w3.eth.contract(
-        address=Web3.to_checksum_address(BTC_TOKEN_ADDRESS),
-        abi=ERC20_APPROVE_ABI,
-    )
-    approve_tx = btc_token.functions.approve(
-        Web3.to_checksum_address(VEBTC_PROXY),
-        value_wei,
-    ).build_transaction({
-        "from": account.address,
-        "nonce": w3.eth.get_transaction_count(account.address),
-        "chainId": CHAIN_ID,
-        "gas": 200_000,
-        "gasPrice": w3.eth.gas_price,
-    })
-    signed_approve = account.sign_transaction(approve_tx)
-    approve_hash = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
-    w3.eth.wait_for_transaction_receipt(approve_hash, timeout=120)
-
-    # Step 2: createLock with ABSOLUTE unlock timestamp (not duration)
+    # createLock with ABSOLUTE unlock timestamp (not duration), sending BTC as msg.value
     tx = contract.functions.createLock(value_wei, unlock_time).build_transaction({
         "from": account.address,
         "nonce": w3.eth.get_transaction_count(account.address),
         "chainId": CHAIN_ID,
-        "gas": 3_000_000,
+        "gas": 600_000,
         "gasPrice": w3.eth.gas_price,
+        "value": value_wei,
     })
 
     signed = account.sign_transaction(tx)
@@ -158,13 +125,11 @@ _LOCKED_UINT256_ABI = [
 ]
 
 
-def set_allowed_manager(token_id: int, manager_address: str) -> dict:
+def set_allowed_manager(manager_address: str) -> dict:
     """
-    Call setAllowedManager on veBTC. The contract only takes the manager address;
-    it applies to the caller's NFT (operator must own the position). token_id is
-    accepted for API symmetry with HTTP routes; it is not sent on-chain.
+    Call setAllowedManager on veBTC. Account-level for msg.sender (operator key);
+    not per-tokenId on-chain.
     """
-    _ = token_id  # reserved for future validation / logging
     if not OPERATOR_PK:
         raise RuntimeError("AGENT_OPERATOR_PRIVATE_KEY is not set")
 
@@ -173,7 +138,7 @@ def set_allowed_manager(token_id: int, manager_address: str) -> dict:
     contract = _vebtc_contract(w3)
     manager = Web3.to_checksum_address(manager_address)
 
-    tx = contract.functions.set_allowed_manager(manager).build_transaction({
+    tx = contract.functions.setAllowedManager(manager).build_transaction({
         "from": account.address,
         "nonce": w3.eth.get_transaction_count(account.address),
         "chainId": CHAIN_ID,
@@ -192,15 +157,16 @@ def set_allowed_manager(token_id: int, manager_address: str) -> dict:
 
 
 def get_lock_info(token_id: int) -> dict:
-    """Read owner, lock schedule, and voting power for a veNFT. Failed reads are None."""
+    """Read ownerOf, locked, balanceOfNFT. Per-field failures become None; never raises."""
     w3 = _w3()
     contract = _vebtc_contract(w3)
     addr = Web3.to_checksum_address(VEBTC_PROXY)
 
     owner: Optional[str] = None
-    amount: Optional[str] = None
+    amount_wei: Optional[str] = None
+    amount_btc: Optional[float] = None
     unlock_time: Optional[int] = None
-    voting_power: Optional[str] = None
+    voting_power_wei: Optional[str] = None
 
     try:
         o = contract.functions.owner_of(token_id).call()
@@ -220,21 +186,25 @@ def get_lock_info(token_id: int) -> dict:
 
     if locked_tuple is not None and len(locked_tuple) >= 2:
         try:
-            amount = str(int(locked_tuple[0]))
+            raw_amt = locked_tuple[0]
+            amt_int = int(raw_amt)
+            amount_wei = str(amt_int)
             unlock_time = int(locked_tuple[1])
+            amount_btc = amt_int / 1e18
         except Exception:
             pass
 
     try:
         vp = contract.functions.balance_of_nft(token_id).call()
-        voting_power = str(int(vp))
+        voting_power_wei = str(int(vp))
     except Exception:
         pass
 
     return {
         "token_id": token_id,
         "owner": owner,
-        "amount": amount,
+        "amount_wei": amount_wei,
+        "amount_btc": amount_btc,
         "unlock_time": unlock_time,
-        "voting_power": voting_power,
+        "voting_power_wei": voting_power_wei,
     }
