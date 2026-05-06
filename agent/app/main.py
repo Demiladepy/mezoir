@@ -2,6 +2,7 @@ from typing import TypedDict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, Field
 
@@ -12,6 +13,20 @@ from app.services.strategy import explain_plan, generate_rationale_llm, select_a
 load_dotenv()
 
 app = FastAPI(title="Mezoir Agent Service")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:3003",
+        "http://localhost:3004",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def _explorer_tx_url(tx_hash: str) -> str:
