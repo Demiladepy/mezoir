@@ -25,6 +25,9 @@ interface ActionState {
   tx_hash?: string;
   explorer_url?: string;
   error?: string;
+  vote_token_id?: number;
+  vote_weight?: number;
+  vote_gauge_name?: string;
 }
 
 interface LogEntry {
@@ -249,6 +252,50 @@ export function IntentPicker() {
           return;
         }
 
+        if (type === "vote_cast") {
+          const tokenId = Number(payload.token_id ?? 0);
+          const weight = Number(payload.weight ?? 0);
+          const gaugeName = String(payload.gauge_name ?? "MUSD/BTC LP");
+          const txHash =
+            payload.tx_hash != null ? String(payload.tx_hash) : undefined;
+          const explorerUrl =
+            payload.explorer_url != null
+              ? String(payload.explorer_url)
+              : undefined;
+          setActions((prev) => {
+            const next = [...prev];
+            for (let i = next.length - 1; i >= 0; i -= 1) {
+              if (next[i].action === "vote_gauge" && !next[i].finished) {
+                next[i] = {
+                  ...next[i],
+                  vote_token_id: tokenId,
+                  vote_weight: weight,
+                  vote_gauge_name: gaugeName,
+                  tx_hash: txHash ?? next[i].tx_hash,
+                  explorer_url: explorerUrl ?? next[i].explorer_url,
+                };
+                return next;
+              }
+            }
+            return [
+              ...next,
+              {
+                action: "vote_gauge",
+                rationale: "",
+                started: true,
+                finished: false,
+                success: null,
+                tx_hash: txHash,
+                explorer_url: explorerUrl,
+                vote_token_id: tokenId,
+                vote_weight: weight,
+                vote_gauge_name: gaugeName,
+              },
+            ];
+          });
+          return;
+        }
+
         if (type === "explanation") {
           setExplanation(String(payload.text ?? ""));
           return;
@@ -290,6 +337,19 @@ export function IntentPicker() {
       return `Granting manager permissions failed: ${error}`;
     }
     return `Action failed: ${error}`;
+  }
+
+  function actionLabel(action: string) {
+    const map: Record<string, string> = {
+      lock_btc: "Lock veBTC",
+      lock_mezo: "Lock veMEZO",
+      set_allowed_manager: "Authorize agent (veBTC)",
+      set_allowed_manager_mezo: "Authorize agent (veMEZO)",
+      extend_unlock: "Extend veBTC lock",
+      extend_unlock_mezo: "Extend veMEZO lock",
+      vote_gauge: "Vote on gauge",
+    };
+    return map[action] ?? action;
   }
 
   function shortAddress(addr: string | null | undefined) {
@@ -505,7 +565,7 @@ export function IntentPicker() {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-slate-800">
-                      {a.action}
+                      {actionLabel(a.action)}
                     </div>
                     {a.tx_hash && a.explorer_url && (
                       <a
@@ -522,6 +582,20 @@ export function IntentPicker() {
                         {friendlyActionError(a.action, a.error)}
                       </p>
                     )}
+                    {a.action === "vote_gauge" &&
+                      a.vote_token_id != null &&
+                      a.vote_weight != null && (
+                        <div className="mt-2 text-sm text-slate-700">
+                          <p>
+                            Voted with veMEZO #{a.vote_token_id} on{" "}
+                            {a.vote_gauge_name ?? "MUSD/BTC LP"}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Weight: {(a.vote_weight / 1e18).toFixed(3)} MEZO
+                            weight
+                          </p>
+                        </div>
+                      )}
                     <div className="mt-2 flex flex-wrap items-start gap-2">
                       <span className="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">
                         AI reasoning

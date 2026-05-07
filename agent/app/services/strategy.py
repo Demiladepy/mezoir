@@ -9,15 +9,36 @@ from app.services.decision import (
 from app.services.intent import Intent
 
 PROFILE_PARAMS = {
-    "btc_heavy": (90, "Maximizing BTC-denominated yield via long lock"),
-    "mezo_heavy": (30, "Minimal BTC lock to qualify for veNFT, MEZO side will dominate"),
-    "balanced": (60, "Balanced lock duration for both fee and voting yield"),
-    "defensive": (30, "Minimum lock duration for low risk and quick exit"),
+    "btc_heavy": {
+        "btc_days": 28,
+        "mezo_days": 0,
+        "rationale": "Maximizing BTC-denominated yield via long lock",
+    },
+    "mezo_heavy": {
+        "btc_days": 7,
+        "mezo_days": 730,
+        "rationale": "Minimal BTC qualifier plus 2-year MEZO lock for max voting boost",
+    },
+    "balanced": {
+        "btc_days": 14,
+        "mezo_days": 365,
+        "rationale": "Balanced exposure across both assets with moderate lock",
+    },
+    "defensive": {
+        "btc_days": 7,
+        "mezo_days": 0,
+        "rationale": "Minimum BTC lock for low risk",
+    },
 }
 
 
 def select_actions(intent: Intent, amount_btc: float) -> list[dict]:
-    days, lock_rationale = PROFILE_PARAMS.get(intent.profile, (60, "Default balanced strategy"))
+    profile = PROFILE_PARAMS.get(
+        intent.profile,
+        {"btc_days": 14, "mezo_days": 0, "rationale": "Default balanced strategy"},
+    )
+    days = int(profile["btc_days"])
+    lock_rationale = str(profile["rationale"])
     operator = os.environ.get("AGENT_OPERATOR_ADDRESS", "")
     return [
         {
@@ -41,12 +62,21 @@ def select_actions_with_decisions(
     """
     Return decision records and final action list.
     """
-    days, _ = PROFILE_PARAMS.get(intent.profile, (60, "Default balanced strategy"))
+    profile = PROFILE_PARAMS.get(
+        intent.profile,
+        {"btc_days": 14, "mezo_days": 0, "rationale": "Default balanced strategy"},
+    )
+    btc_days = int(profile["btc_days"])
+    mezo_days = int(profile["mezo_days"])
+    base_rationale = str(profile["rationale"])
+
     options = generate_lock_options(
         intent_dict=intent.model_dump(),
-        amount_btc=amount_btc,
+        btc_amount=amount_btc,
+        mezo_amount=0.001,
         chain_snapshot=chain_snapshot,
-        target_duration_days=days,
+        btc_days=btc_days,
+        mezo_days=mezo_days,
     )
     chosen = pick_option(options)
     decision_rationale = explain_decision_llm(
@@ -57,14 +87,44 @@ def select_actions_with_decisions(
     )
 
     operator = os.environ.get("AGENT_OPERATOR_ADDRESS", "")
-    actions = [
-        chosen["action"],
-        {
-            "type": "set_allowed_manager",
-            "params": {"manager_address": operator},
-            "rationale": "Authorizing agent to manage the resulting veBTC position on user's behalf",
-        },
-    ]
+    actions: list[dict] = []
+    chosen_action = {**chosen["action"]}
+    if "rationale" not in chosen_action:
+        chosen_action["rationale"] = base_rationale
+    actions.append(chosen_action)
+
+    has_btc_action = chosen_action["type"] in {"lock_btc", "extend_unlock"}
+    has_mezo_action = chosen_action["type"] in {"lock_mezo", "extend_unlock_mezo"}
+
+    if has_btc_action:
+        actions.append(
+            {
+                "type": "set_allowed_manager",
+                "params": {"manager_address": operator},
+                "rationale": "Authorizing agent to manage the resulting veBTC position on user's behalf",
+            }
+        )
+    if has_mezo_action:
+        actions.append(
+            {
+                "type": "set_allowed_manager_mezo",
+                "params": {"manager_address": operator},
+                "rationale": "Authorizing agent to manage the resulting veMEZO position on user's behalf",
+            }
+        )
+
+    profile_name = intent.profile
+    if has_mezo_action and profile_name in ("mezo_heavy", "balanced"):
+        actions.append(
+            {
+                "type": "vote_gauge",
+                "params": {
+                    "token_id": "__POST_LOCK_MEZO__",
+                    "weight": int(0.001 * 1e18),
+                },
+                "rationale": "Casting governance votes with the new veMEZO position to direct emissions and earn boosted rewards",
+            }
+        )
     return {
         "decisions": [
             {

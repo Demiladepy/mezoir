@@ -13,6 +13,8 @@ from typing import Optional, TypedDict
 from dotenv import load_dotenv
 from web3 import Web3
 
+from app.services import vemezo
+
 load_dotenv()
 from web3.middleware import ExtraDataToPOAMiddleware
 
@@ -308,6 +310,11 @@ def read_chain_snapshot() -> dict:
         "operator_oldest_unlock_time": None,
         "operator_newest_unlock_time": None,
         "operator_newest_token_id": None,
+        "mezo_position_count": None,
+        "mezo_total_locked": None,
+        "mezo_oldest_unlock_time": None,
+        "mezo_newest_unlock_time": None,
+        "mezo_newest_token_id": None,
     }
 
     operator_address = os.environ.get("AGENT_OPERATOR_ADDRESS", "")
@@ -359,5 +366,47 @@ def read_chain_snapshot() -> dict:
         )
     except Exception:
         snapshot["operator_newest_token_id"] = None
+
+    try:
+        mezo_positions = vemezo.list_operator_positions_mezo(operator_address or None)
+        snapshot["mezo_position_count"] = len(mezo_positions)
+    except Exception as e:
+        print(f"read_chain_snapshot mezo positions failed: {e}")
+        mezo_positions = []
+        snapshot["mezo_position_count"] = None
+
+    try:
+        snapshot["mezo_total_locked"] = sum(
+            float(p.get("amount_mezo", 0.0) or 0.0) for p in mezo_positions
+        )
+    except Exception:
+        snapshot["mezo_total_locked"] = None
+
+    try:
+        mezo_unlocks = [
+            int(p["unlock_time"])
+            for p in mezo_positions
+            if p.get("unlock_time") is not None
+        ]
+        snapshot["mezo_oldest_unlock_time"] = min(mezo_unlocks) if mezo_unlocks else None
+        snapshot["mezo_newest_unlock_time"] = max(mezo_unlocks) if mezo_unlocks else None
+    except Exception:
+        snapshot["mezo_oldest_unlock_time"] = None
+        snapshot["mezo_newest_unlock_time"] = None
+
+    try:
+        newest_mezo = (
+            max(
+                mezo_positions,
+                key=lambda p: int(p.get("unlock_time") or 0),
+            )
+            if mezo_positions
+            else None
+        )
+        snapshot["mezo_newest_token_id"] = (
+            int(newest_mezo["token_id"]) if newest_mezo is not None else None
+        )
+    except Exception:
+        snapshot["mezo_newest_token_id"] = None
 
     return snapshot

@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, Field
 
-from app.services import vebtc
+from app.services import gauge, vebtc, vemezo
 from app.services.context import build_action_context
 from app.services.intent import parse_intent_llm
 from app.services.strategy import (
@@ -59,6 +59,20 @@ class LockBtcRequest(BaseModel):
 
 
 class LockBtcResponse(BaseModel):
+    tx_hash: str
+    token_id: int | None
+    block_number: int
+    explorer_url: str
+
+
+class LockMezoRequest(BaseModel):
+    amount_mezo: float = Field(..., gt=0, description="Amount of MEZO to lock")
+    duration_days: int = Field(
+        ..., gt=0, le=4 * 365, description="Lock duration in days"
+    )
+
+
+class LockMezoResponse(BaseModel):
     tx_hash: str
     token_id: int | None
     block_number: int
@@ -121,6 +135,20 @@ def lock_btc_endpoint(req: LockBtcRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/agent/lock_mezo", response_model=LockMezoResponse)
+def lock_mezo_endpoint(req: LockMezoRequest):
+    try:
+        result = vemezo.lock_mezo(req.amount_mezo, req.duration_days)
+        return LockMezoResponse(
+            tx_hash=result["tx_hash"],
+            token_id=result["token_id"],
+            block_number=result["block_number"],
+            explorer_url=f"https://explorer.test.mezo.org/tx/{result['tx_hash']}",
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/agent/balance/{address}")
 def balance_endpoint(address: str):
     return {"address": address, "vebtc_count": vebtc.get_balance(address)}
@@ -144,6 +172,46 @@ def lock_info_endpoint(token_id: int):
     return vebtc.get_lock_info(token_id)
 
 
+@app.get("/agent/lock_mezo/{token_id}")
+def lock_info_mezo_endpoint(token_id: int):
+    return vemezo.get_lock_info_mezo(token_id)
+
+
+@app.get("/agent/dashboard")
+async def get_dashboard():
+    snapshot = await asyncio.to_thread(vebtc.read_chain_snapshot)
+    gauge_state = await asyncio.to_thread(gauge.get_gauge_state)
+
+    operator_votes: list[dict] = []
+    mezo_count = snapshot.get("mezo_position_count", 0) or 0
+    if mezo_count > 0:
+        newest_id = snapshot.get("mezo_newest_token_id")
+        if newest_id is not None:
+            try:
+                vote_weight = await asyncio.to_thread(gauge.get_vote_for_token, int(newest_id))
+                if vote_weight > 0:
+                    operator_votes.append(
+                        {
+                            "token_id": int(newest_id),
+                            "weight_wei": str(vote_weight),
+                            "gauge_name": gauge_state.get("gauge_name"),
+                        }
+                    )
+            except Exception:
+                pass
+
+    return {
+        "btc_positions": snapshot.get("operator_position_count", 0),
+        "btc_total_locked": snapshot.get("operator_total_locked_btc", 0),
+        "mezo_positions": snapshot.get("mezo_position_count", 0),
+        "mezo_total_locked": snapshot.get("mezo_total_locked", 0),
+        "active_votes": operator_votes,
+        "gauge_total_votes_wei": str(gauge_state.get("total_votes", 0)),
+        "operator_address": snapshot.get("operator_address"),
+        "block_number": snapshot.get("block_number"),
+    }
+
+
 @app.post("/agent/execute")
 def execute_endpoint(body: ExecuteRequest):
     parsed = parse_intent_llm(body.intent)
@@ -152,6 +220,7 @@ def execute_endpoint(body: ExecuteRequest):
     actions = decision_pack["actions"]
     decisions = decision_pack["decisions"]
     results: list[dict] = []
+    last_mezo_token_id = None
     for action in actions:
         atype = action["type"]
         rationale = action["rationale"]
@@ -176,6 +245,37 @@ def execute_endpoint(body: ExecuteRequest):
                         fp["amount_btc"],
                         fp["duration_days"],
                     )
+            elif atype == "lock_mezo":
+                p = action["params"]
+                details = vemezo.lock_mezo(
+                    p["amount_mezo"],
+                    p["duration_days"],
+                )
+                last_mezo_token_id = details.get("token_id")
+            elif atype == "set_allowed_manager_mezo":
+                p = action["params"]
+                details = vemezo.set_allowed_manager_mezo(p["manager_address"])
+            elif atype == "extend_unlock_mezo":
+                p = action["params"]
+                try:
+                    details = vemezo.extend_unlock_mezo(
+                        p["token_id"],
+                        p["new_unlock_time"],
+                    )
+                except Exception:
+                    details = vemezo.lock_mezo(0.001, 365)
+                last_mezo_token_id = details.get("token_id", p.get("token_id"))
+            elif atype == "vote_gauge":
+                p = dict(action["params"])
+                if p.get("token_id") == "__POST_LOCK_MEZO__":
+                    if last_mezo_token_id is None:
+                        continue
+                    p["token_id"] = last_mezo_token_id
+                details = gauge.cast_vote(int(p["token_id"]), int(p["weight"]))
+                gauge_state = gauge.get_gauge_state()
+                details["gauge_name"] = gauge_state.get("gauge_name", "MUSD/BTC LP")
+                details["token_id"] = int(p["token_id"])
+                details["weight"] = int(p["weight"])
             elif atype == "set_allowed_manager":
                 p = action["params"]
                 details = vebtc.set_allowed_manager(p["manager_address"])
@@ -249,6 +349,7 @@ async def execute_stream_endpoint(intent: str, amount_btc: float):
         return datetime.now(timezone.utc).isoformat()
 
     async def stream():
+        last_mezo_token_id = None
         yield _sse(
             {"type": "log", "timestamp": _ts(), "message": "Parsing intent..."}
         )
@@ -459,6 +560,72 @@ async def execute_stream_endpoint(intent: str, amount_btc: float):
                             amount_btc=fp["amount_btc"],
                             duration_days=fp["duration_days"],
                         )
+                elif atype == "lock_mezo":
+                    p = action["params"]
+                    details = vemezo.lock_mezo(
+                        amount_mezo=p["amount_mezo"],
+                        duration_days=p["duration_days"],
+                    )
+                    last_mezo_token_id = details.get("token_id")
+                elif atype == "set_allowed_manager_mezo":
+                    p = action["params"]
+                    details = vemezo.set_allowed_manager_mezo(p["manager_address"])
+                elif atype == "extend_unlock_mezo":
+                    p = action["params"]
+                    try:
+                        details = vemezo.extend_unlock_mezo(
+                            p["token_id"],
+                            p["new_unlock_time"],
+                        )
+                    except Exception:
+                        yield _sse(
+                            {
+                                "type": "log",
+                                "timestamp": _ts(),
+                                "message": "Extend not supported on mock — falling back to lock_mezo",
+                            }
+                        )
+                        await asyncio.sleep(0)
+                        details = vemezo.lock_mezo(amount_mezo=0.001, duration_days=365)
+                    last_mezo_token_id = details.get("token_id", p.get("token_id"))
+                elif atype == "vote_gauge":
+                    p = dict(action["params"])
+                    if p.get("token_id") == "__POST_LOCK_MEZO__":
+                        if last_mezo_token_id is None:
+                            yield _sse(
+                                {
+                                    "type": "log",
+                                    "timestamp": _ts(),
+                                    "message": "No veMEZO position available to vote — skipping",
+                                }
+                            )
+                            await asyncio.sleep(0)
+                            continue
+                        p["token_id"] = last_mezo_token_id
+                    yield _sse(
+                        {
+                            "type": "log",
+                            "timestamp": _ts(),
+                            "message": f"Casting vote with veMEZO #{p['token_id']}...",
+                        }
+                    )
+                    await asyncio.sleep(0)
+                    details = await asyncio.to_thread(gauge.cast_vote, int(p["token_id"]), int(p["weight"]))
+                    gauge_state = await asyncio.to_thread(gauge.get_gauge_state)
+                    details["gauge_name"] = gauge_state.get("gauge_name", "MUSD/BTC LP")
+                    details["token_id"] = int(p["token_id"])
+                    details["weight"] = int(p["weight"])
+                    yield _sse(
+                        {
+                            "type": "vote_cast",
+                            "token_id": details["token_id"],
+                            "weight": details["weight"],
+                            "tx_hash": details["tx_hash"],
+                            "explorer_url": _explorer_tx_url(details["tx_hash"]),
+                            "gauge_name": details["gauge_name"],
+                        }
+                    )
+                    await asyncio.sleep(0)
                 elif atype == "set_allowed_manager":
                     p = action["params"]
                     details = vebtc.set_allowed_manager(p["manager_address"])
