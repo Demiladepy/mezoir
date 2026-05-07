@@ -156,6 +156,50 @@ def set_allowed_manager(manager_address: str) -> dict:
     }
 
 
+def extend_unlock(token_id: int, new_unlock_time: int) -> dict:
+    """
+    Calls increaseUnlockTime(tokenId, newUnlockTime) on the veBTC contract.
+    Same signing pattern as lock_btc. Returns {"tx_hash", "block_number"}.
+    """
+    try:
+        has_fn = any(
+            item.get("type") == "function" and item.get("name") == "increaseUnlockTime"
+            for item in VEBTC_ABI
+            if isinstance(item, dict)
+        )
+        if not has_fn:
+            print("extend_unlock warning: increaseUnlockTime not present in ABI")
+            raise RuntimeError(
+                "MockVeBTC does not support extend_unlock — use lock_new path."
+            )
+
+        if not OPERATOR_PK:
+            raise RuntimeError("AGENT_OPERATOR_PRIVATE_KEY is not set")
+
+        w3 = _w3()
+        account = w3.eth.account.from_key(OPERATOR_PK)
+        contract = _vebtc_contract(w3)
+        tx = contract.functions.increaseUnlockTime(
+            int(token_id), int(new_unlock_time)
+        ).build_transaction(
+            {
+                "from": account.address,
+                "nonce": w3.eth.get_transaction_count(account.address),
+                "chainId": CHAIN_ID,
+                "gas": 600_000,
+                "gasPrice": w3.eth.gas_price,
+            }
+        )
+        signed = account.sign_transaction(tx)
+        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+        receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+        return {"tx_hash": tx_hash.hex(), "block_number": receipt["blockNumber"]}
+    except RuntimeError:
+        raise
+    except Exception as e:
+        raise RuntimeError(f"extend_unlock failed: {e}") from e
+
+
 def get_lock_info(token_id: int) -> dict:
     """Read ownerOf, locked, balanceOfNFT. Per-field failures become None; never raises."""
     w3 = _w3()
@@ -208,3 +252,112 @@ def get_lock_info(token_id: int) -> dict:
         "unlock_time": unlock_time,
         "voting_power_wei": voting_power_wei,
     }
+
+
+def list_operator_positions(operator_address: str | None = None) -> list[dict]:
+    """
+    Return all veBTC positions owned by the operator wallet.
+    Each position: {"token_id": int, "amount_wei": str, "amount_btc": float, "unlock_time": int}
+    Reads via balanceOf + tokenOfOwnerByIndex + locked.
+    Uses operator address from env if not passed.
+    Returns empty list on any failure (don't raise).
+    """
+    try:
+        addr_in = operator_address or os.environ.get("AGENT_OPERATOR_ADDRESS", "")
+        if not addr_in:
+            print("list_operator_positions: missing operator address")
+            return []
+
+        w3 = _w3()
+        contract = _vebtc_contract(w3)
+        owner = Web3.to_checksum_address(addr_in)
+
+        balance = int(contract.functions.balanceOf(owner).call())
+        count = min(balance, 50)
+
+        positions: list[dict] = []
+        for i in range(count):
+            token_id = int(contract.functions.tokenOfOwnerByIndex(owner, i).call())
+            locked = contract.functions.locked(token_id).call()
+            amount_int = int(locked[0])
+            unlock_time = int(locked[1])
+            positions.append(
+                {
+                    "token_id": token_id,
+                    "amount_wei": str(amount_int),
+                    "amount_btc": amount_int / 1e18,
+                    "unlock_time": unlock_time,
+                }
+            )
+        return positions
+    except Exception as e:
+        print(f"list_operator_positions failed: {e}")
+        return []
+
+
+def read_chain_snapshot() -> dict:
+    """
+    Single read of relevant chain state for context-passing.
+    """
+    snapshot = {
+        "block_number": None,
+        "block_timestamp": None,
+        "operator_address": None,
+        "operator_position_count": None,
+        "operator_total_locked_btc": None,
+        "operator_oldest_unlock_time": None,
+        "operator_newest_unlock_time": None,
+        "operator_newest_token_id": None,
+    }
+
+    operator_address = os.environ.get("AGENT_OPERATOR_ADDRESS", "")
+    try:
+        if operator_address:
+            snapshot["operator_address"] = Web3.to_checksum_address(operator_address)
+    except Exception:
+        snapshot["operator_address"] = operator_address or None
+
+    try:
+        w3 = _w3()
+        block = w3.eth.get_block("latest")
+        snapshot["block_number"] = int(block["number"])
+        snapshot["block_timestamp"] = int(block["timestamp"])
+    except Exception as e:
+        print(f"read_chain_snapshot block read failed: {e}")
+
+    positions = list_operator_positions(operator_address or None)
+    try:
+        snapshot["operator_position_count"] = len(positions)
+    except Exception:
+        snapshot["operator_position_count"] = None
+
+    try:
+        total_btc = sum(float(p.get("amount_btc", 0.0) or 0.0) for p in positions)
+        snapshot["operator_total_locked_btc"] = total_btc
+    except Exception:
+        snapshot["operator_total_locked_btc"] = None
+
+    try:
+        unlocks = [
+            int(p["unlock_time"])
+            for p in positions
+            if p.get("unlock_time") is not None
+        ]
+        snapshot["operator_oldest_unlock_time"] = min(unlocks) if unlocks else None
+        snapshot["operator_newest_unlock_time"] = max(unlocks) if unlocks else None
+    except Exception:
+        snapshot["operator_oldest_unlock_time"] = None
+        snapshot["operator_newest_unlock_time"] = None
+
+    try:
+        newest = max(
+            positions,
+            key=lambda p: int(p.get("unlock_time") or 0),
+        ) if positions else None
+        snapshot["operator_newest_token_id"] = (
+            int(newest["token_id"]) if newest is not None else None
+        )
+    except Exception:
+        snapshot["operator_newest_token_id"] = None
+
+    return snapshot
