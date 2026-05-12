@@ -6,7 +6,7 @@
       ],
       "name": "createLock",
       "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-      "stateMutability": "payable",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

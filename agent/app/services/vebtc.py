@@ -23,6 +23,8 @@ RPC_URL = os.getenv("MEZO_TESTNET_RPC_URL", "https://rpc.test.mezo.org")
 CHAIN_ID = int(os.getenv("MEZO_TESTNET_CHAIN_ID", "31611"))
 VEBTC_PROXY = os.getenv("VEBTC_PROXY_ADDRESS", "0xB63fcCd03521Cf21907627bd7fA465C129479231")
 OPERATOR_PK = os.getenv("AGENT_OPERATOR_PRIVATE_KEY", "")
+# Mezo BTC ERC20 precompile (public address, not a secret).
+BTC_TOKEN_ADDRESS = "0x7b7C000000000000000000000000000000000000"
 
 # ---- ABI loading ----
 ABI_PATH = Path(__file__).parent.parent / "abis" / "vebtc.json"
@@ -48,7 +50,7 @@ def _vebtc_contract(w3: Web3):
 
 
 def lock_btc(amount_btc: float, duration_days: int) -> LockResult:
-    """Lock BTC into veBTC. Approve BTC precompile, then call createLock with absolute unlock timestamp."""
+    """Lock BTC into veBTC. Approve BTC token, then call createLock."""
     if not OPERATOR_PK:
         raise RuntimeError("AGENT_OPERATOR_PRIVATE_KEY is not set")
 
@@ -59,20 +61,58 @@ def lock_btc(amount_btc: float, duration_days: int) -> LockResult:
     value_wei = w3.to_wei(amount_btc, "ether")
 
     latest_block = w3.eth.get_block("latest")
-    WEEK = 7 * 24 * 60 * 60
-    raw_unlock = latest_block["timestamp"] + (duration_days * 24 * 60 * 60)
-    # Round to nearest week boundary - matches contract's internal floor division
-    # Use floor + WEEK to guarantee we're above the requested duration after rounding
-    unlock_time = (raw_unlock // WEEK) * WEEK + WEEK
+    ts = int(latest_block["timestamp"])
+    week = 7 * 24 * 60 * 60
+    raw_unlock = ts + int(duration_days) * 24 * 60 * 60
+    # Keep unlock aligned to veBTC's week-based schedule.
+    unlock_time = (raw_unlock // week) * week + week
 
-    # createLock with ABSOLUTE unlock timestamp (not duration), sending BTC as msg.value
-    tx = contract.functions.createLock(value_wei, unlock_time).build_transaction({
+    # Clamp to veBTC's hard max of 4 weeks (28 days).
+    duration_seconds = min(unlock_time - ts, 4 * week)
+    print(
+        f"DEBUG: ts={ts}, unlock_time={unlock_time}, "
+        f"duration_seconds={duration_seconds}, "
+        f"effective_days={duration_seconds / 86400:.2f}"
+    )
+
+    # Approve veBTC to pull BTC via ERC20 transferFrom.
+    erc20 = w3.eth.contract(
+        address=Web3.to_checksum_address(BTC_TOKEN_ADDRESS),
+        abi=[
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "spender", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                ],
+                "name": "approve",
+                "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+                "stateMutability": "nonpayable",
+                "type": "function",
+            }
+        ],
+    )
+
+    approve_tx = erc20.functions.approve(
+        Web3.to_checksum_address(VEBTC_PROXY), value_wei
+    ).build_transaction(
+        {
+            "from": account.address,
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "chainId": CHAIN_ID,
+            "gas": 200_000,
+            "gasPrice": w3.eth.gas_price,
+        }
+    )
+    signed_approve = account.sign_transaction(approve_tx)
+    approve_hash = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
+    w3.eth.wait_for_transaction_receipt(approve_hash, timeout=120)
+
+    tx = contract.functions.createLock(value_wei, duration_seconds).build_transaction({
         "from": account.address,
         "nonce": w3.eth.get_transaction_count(account.address),
         "chainId": CHAIN_ID,
-        "gas": 600_000,
+        "gas": 1_000_000,
         "gasPrice": w3.eth.gas_price,
-        "value": value_wei,
     })
 
     signed = account.sign_transaction(tx)
