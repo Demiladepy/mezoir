@@ -140,7 +140,8 @@ def _get_latest_token_id(w3: Web3, contract, owner: str) -> Optional[int]:
         bal = contract.functions.balanceOf(owner).call()
         if bal == 0:
             return None
-        return contract.functions.tokenOfOwnerByIndex(owner, bal - 1).call()
+        tid = int(contract.functions.ownerToNFTokenIdList(owner, bal - 1).call())
+        return tid if tid != 0 else None
     except Exception:
         return None
 
@@ -300,7 +301,7 @@ def list_operator_positions(operator_address: str | None = None) -> list[dict]:
     """
     Return all veBTC positions owned by the operator wallet.
     Each position: {"token_id": int, "amount_wei": str, "amount_btc": float, "unlock_time": int}
-    Reads via balanceOf + tokenOfOwnerByIndex + locked.
+    Reads via ownerToNFTokenIdList (0 sentinel past last index) + locked.
     Uses operator address from env if not passed.
     Returns empty list on any failure (don't raise).
     """
@@ -314,23 +315,31 @@ def list_operator_positions(operator_address: str | None = None) -> list[dict]:
         contract = _vebtc_contract(w3)
         owner = Web3.to_checksum_address(addr_in)
 
-        balance = int(contract.functions.balanceOf(owner).call())
-        count = min(balance, 50)
-
         positions: list[dict] = []
-        for i in range(count):
-            token_id = int(contract.functions.tokenOfOwnerByIndex(owner, i).call())
-            locked = contract.functions.locked(token_id).call()
-            amount_int = int(locked[0])
-            unlock_time = int(locked[1])
-            positions.append(
-                {
-                    "token_id": token_id,
-                    "amount_wei": str(amount_int),
-                    "amount_btc": amount_int / 1e18,
-                    "unlock_time": unlock_time,
-                }
-            )
+        for i in range(50):
+            try:
+                token_id = int(
+                    contract.functions.ownerToNFTokenIdList(owner, i).call()
+                )
+            except Exception:
+                break
+            if token_id == 0:
+                break
+            try:
+                locked = contract.functions.locked(token_id).call()
+                amount_int = int(locked[0])
+                unlock_time = int(locked[1])
+                positions.append(
+                    {
+                        "token_id": token_id,
+                        "amount_wei": str(amount_int),
+                        "amount_btc": amount_int / 1e18,
+                        "unlock_time": unlock_time,
+                    }
+                )
+            except Exception as e:
+                print(f"locked read failed for token {token_id}: {e}")
+                continue
         return positions
     except Exception as e:
         print(f"list_operator_positions failed: {e}")

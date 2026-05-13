@@ -1,0 +1,20 @@
+type VePosition @entity(immutable: false) {
+  id: ID! # contractAddress-tokenId
+  contract: String! # "veBTC" or "veMEZO"
+  tokenId: BigInt!
+  owner: Bytes!
+  amount: BigInt! # in wei
+  unlockTime: BigInt!
+  createdAt: BigInt! # block timestamp
+  updatedAt: BigInt!
+  active: Boolean! # false after burn
+}
+
+type VoteCast @entity(immutable: true) {
+  id: ID! # txHash-logIndex
+  gauge: Bytes!
+  tokenId: BigInt!
+  voter: Bytes!
+  weight: BigInt!
+  timestamp: BigInt!
+}

@@ -1,0 +1,71 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: VeBTC
+    network: mezo-testnet
+    source:
+      address: "0x38E35d92E6Bfc6787272A62345856B13eA12130a"
+      abi: VeBTC
+      startBlock: 12978000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VePosition
+        - VoteCast
+      abis:
+        - name: VeBTC
+          file: ./abis/vebtc.json
+      eventHandlers:
+        # Deposit(provider, tokenId, depositType indexed; value, locktime, ts in data)
+        - event: Deposit(indexed address,indexed uint256,indexed uint8,uint256,uint256,uint256)
+          handler: handleVeBTCDeposit
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleVeBTCTransfer
+      file: ./src/mapping.ts
+  - kind: ethereum
+    name: VeMEZO
+    network: mezo-testnet
+    source:
+      address: "0xaCE816CA2bcc9b12C59799dcC5A959Fb9b98111b"
+      abi: VeMEZO
+      startBlock: 12997000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VePosition
+        - VoteCast
+      abis:
+        - name: VeMEZO
+          file: ./abis/vemezo.json
+      eventHandlers:
+        - event: Deposit(indexed address,indexed uint256,indexed uint8,uint256,uint256,uint256)
+          handler: handleVeMEZODeposit
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleVeMEZOTransfer
+      file: ./src/mapping.ts
+  - kind: ethereum
+    name: MockGauge
+    network: mezo-testnet
+    source:
+      address: "0x6E60CbCC649bD90b2390e9B13dC110d414dCbc40"
+      abi: MockGauge
+      startBlock: 13000000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - VoteCast
+      abis:
+        - name: MockGauge
+          file: ./abis/gauge.json
+      eventHandlers:
+        - event: Voted(indexed address,indexed uint256,uint256,uint256)
+          handler: handleVoted
+      file: ./src/mapping.ts

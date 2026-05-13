@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Tell the agent your goal. It picks the venue and acts."
+    />
+    <title>Mezoir — Intent-based agent for Mezo</title>
+    <!-- Before Vite modules: Node globals some web3 deps still touch at runtime -->
+    <script>
+      (function () {
+        var g = typeof globalThis !== "undefined" ? globalThis : window;
+        g.global = g.global || g;
+        if (typeof g.process === "undefined") {
+          g.process = { env: {} };
+        }
+        if (!g.process.env) {
+          g.process.env = {};
+        }
+        if (g.process.env.NODE_ENV == null) {
+          g.process.env.NODE_ENV = "development";
+        }
+        if (g.process.env.TEST_NETWORK == null) {
+          g.process.env.TEST_NETWORK = "";
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-full flex flex-col">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,9 +1,7 @@
-"use client";
-
 import { useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
 
-const AGENT_URL = process.env.NEXT_PUBLIC_AGENT_URL || "http://localhost:8000";
+import { AGENT_URL } from "@/lib/agent-url";
 
 interface LockResult {
   tx_hash: string;

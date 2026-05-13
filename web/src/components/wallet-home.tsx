@@ -1,5 +1,3 @@
-"use client";
-
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import { Footer } from "@/components/footer";

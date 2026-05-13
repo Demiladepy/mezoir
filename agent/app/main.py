@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, Field
 
-from app.services import gauge, vebtc, vemezo
+from app.services import gauge, goldsky, vebtc, vemezo
 from app.services.context import build_action_context
 from app.services.intent import parse_intent_llm
 from app.services.strategy import (
@@ -179,6 +179,21 @@ def lock_info_mezo_endpoint(token_id: int):
 
 @app.get("/agent/dashboard")
 async def get_dashboard():
+    operator = os.getenv("AGENT_OPERATOR_ADDRESS", "").strip()
+    if operator:
+        try:
+            dash = await asyncio.to_thread(goldsky.try_dashboard_from_subgraph, operator)
+            if dash is not None:
+                gauge_state = await asyncio.to_thread(gauge.get_gauge_state)
+                dash["gauge_total_votes_wei"] = str(gauge_state.get("total_votes", 0))
+                for v in dash["active_votes"]:
+                    v["gauge_name"] = gauge_state.get("gauge_name")
+                print("dashboard via goldsky")
+                return dash
+        except Exception as e:
+            print(f"dashboard goldsky failed: {e}")
+
+    print("dashboard via rpc fallback")
     snapshot = await asyncio.to_thread(vebtc.read_chain_snapshot)
     gauge_state = await asyncio.to_thread(gauge.get_gauge_state)
 

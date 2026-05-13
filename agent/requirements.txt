@@ -5,4 +5,5 @@ langchain-openai
 uvicorn
 python-dotenv
 web3>=6.0,<7.0
+requests>=2.31,<3
 anthropic>=0.39

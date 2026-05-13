@@ -18,6 +18,21 @@ RPC_URL = os.getenv("MEZO_TESTNET_RPC_URL", "https://rpc.test.mezo.org")
 CHAIN_ID = int(os.getenv("MEZO_TESTNET_CHAIN_ID", "31611"))
 VEMEZO_PROXY = os.getenv("VEMEZO_PROXY_ADDRESS", "")
 OPERATOR_PK = os.getenv("AGENT_OPERATOR_PRIVATE_KEY", "")
+# Mezo MEZO ERC20 precompile (public address, not a secret).
+MEZO_TOKEN_ADDRESS = "0x7b7C000000000000000000000000000000000001"
+
+ERC20_APPROVE_ABI = [
+    {
+        "inputs": [
+            {"internalType": "address", "name": "spender", "type": "address"},
+            {"internalType": "uint256", "name": "amount", "type": "uint256"},
+        ],
+        "name": "approve",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    }
+]
 
 # ---- ABI loading ----
 ABI_PATH = Path(__file__).parent.parent / "abis" / "vemezo.json"
@@ -41,7 +56,8 @@ def _get_latest_token_id_mezo(w3: Web3, contract, owner: str) -> Optional[int]:
         bal = contract.functions.balanceOf(owner).call()
         if bal == 0:
             return None
-        return contract.functions.tokenOfOwnerByIndex(owner, bal - 1).call()
+        tid = int(contract.functions.ownerToNFTokenIdList(owner, bal - 1).call())
+        return tid if tid != 0 else None
     except Exception:
         return None
 
@@ -57,17 +73,46 @@ def lock_mezo(amount_mezo: float, duration_days: int) -> dict:
     value_wei = w3.to_wei(amount_mezo, "ether")
 
     latest_block = w3.eth.get_block("latest")
+    ts = int(latest_block["timestamp"])
     WEEK = 7 * 24 * 60 * 60
-    raw_unlock = latest_block["timestamp"] + (duration_days * 24 * 60 * 60)
-    unlock_time = (raw_unlock // WEEK) * WEEK + WEEK
+    # Next Thursday 00:00 UTC (week boundary from Unix epoch).
+    next_epoch_start = ts + (WEEK - (ts % WEEK))
+    epochs_to_lock = max(1, min(round(duration_days / 7), 208))
+    unlock_time = next_epoch_start + (epochs_to_lock - 1) * WEEK
 
-    tx = contract.functions.createLock(value_wei, unlock_time).build_transaction({
+    duration_seconds = unlock_time - ts
+    duration_seconds = min(duration_seconds, 208 * WEEK)
+    print(
+        f"DEBUG: ts={ts}, unlock_time={unlock_time}, "
+        f"duration_seconds={duration_seconds}, "
+        f"effective_days={duration_seconds / 86400:.2f}"
+    )
+
+    mezo_token = w3.eth.contract(
+        address=Web3.to_checksum_address(MEZO_TOKEN_ADDRESS),
+        abi=ERC20_APPROVE_ABI,
+    )
+    approve_tx = mezo_token.functions.approve(
+        Web3.to_checksum_address(VEMEZO_PROXY), value_wei
+    ).build_transaction(
+        {
+            "from": account.address,
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "chainId": CHAIN_ID,
+            "gas": 200_000,
+            "gasPrice": w3.eth.gas_price,
+        }
+    )
+    signed_approve = account.sign_transaction(approve_tx)
+    approve_hash = w3.eth.send_raw_transaction(signed_approve.raw_transaction)
+    w3.eth.wait_for_transaction_receipt(approve_hash, timeout=120)
+
+    tx = contract.functions.createLock(value_wei, duration_seconds).build_transaction({
         "from": account.address,
         "nonce": w3.eth.get_transaction_count(account.address),
         "chainId": CHAIN_ID,
-        "gas": 600_000,
+        "gas": 1_000_000,
         "gasPrice": w3.eth.gas_price,
-        "value": value_wei,
     })
 
     signed = account.sign_transaction(tx)
@@ -165,23 +210,32 @@ def list_operator_positions_mezo(operator_address: str | None = None) -> list[di
         w3 = _w3()
         contract = _vemezo_contract(w3)
         owner = Web3.to_checksum_address(addr_in)
-        balance = int(contract.functions.balanceOf(owner).call())
-        count = min(balance, 50)
 
         positions: list[dict] = []
-        for i in range(count):
-            token_id = int(contract.functions.tokenOfOwnerByIndex(owner, i).call())
-            locked = contract.functions.locked(token_id).call()
-            amount_int = int(locked[0])
-            unlock_time = int(locked[1])
-            positions.append(
-                {
-                    "token_id": token_id,
-                    "amount_wei": str(amount_int),
-                    "amount_mezo": amount_int / 1e18,
-                    "unlock_time": unlock_time,
-                }
-            )
+        for i in range(250):
+            try:
+                token_id = int(
+                    contract.functions.ownerToNFTokenIdList(owner, i).call()
+                )
+            except Exception:
+                break
+            if token_id == 0:
+                break
+            try:
+                locked = contract.functions.locked(token_id).call()
+                amount_int = int(locked[0])
+                unlock_time = int(locked[1])
+                positions.append(
+                    {
+                        "token_id": token_id,
+                        "amount_wei": str(amount_int),
+                        "amount_mezo": amount_int / 1e18,
+                        "unlock_time": unlock_time,
+                    }
+                )
+            except Exception as e:
+                print(f"locked read failed for token {token_id}: {e}")
+                continue
         return positions
     except Exception as e:
         print(f"list_operator_positions_mezo failed: {e}")

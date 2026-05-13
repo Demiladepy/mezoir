@@ -1,12 +1,10 @@
-"use client";
-
 import { useState } from "react";
 
 const EXPLORER = "https://explorer.test.mezo.org";
 
 /** Demo MockVeBTC on Mezo testnet; override via env for your deployment. */
 const MOCK_VEBTC_ADDRESS =
-  process.env.NEXT_PUBLIC_VEBTC_PROXY_ADDRESS ??
+  import.meta.env.VITE_VEBTC_PROXY_ADDRESS ??
   "0x1C77C4ABD2295c88A8C99647B25345879624ac57";
 
 function shortenAddr(addr: string) {

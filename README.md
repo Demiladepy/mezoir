@@ -229,10 +229,11 @@ Create env file:
 cp .env.example .env
 ```
 
-Set:
+Set (in `web/.env`; see `web/.env.example`):
 
-- `NEXT_PUBLIC_APP_NAME=Mezoir`
-- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<your_project_id>`
+- `VITE_APP_NAME=Mezoir`
+- `VITE_WALLETCONNECT_PROJECT_ID=<your_project_id>`
+- `VITE_AGENT_URL=http://localhost:8001` (or the URL where the agent listens)
 
 Install and run:
 

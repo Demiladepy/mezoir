@@ -1,5 +1,3 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# Web stack
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+This app uses **Vite + React** (not Next.js). Entry: `index.html`, `src/main.tsx`, `src/App.tsx`. Env vars exposed to the client use the **`VITE_`** prefix (`import.meta.env`).
