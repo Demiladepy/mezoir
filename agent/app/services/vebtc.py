@@ -14,9 +14,9 @@ from dotenv import load_dotenv
 from web3 import Web3
 
 from app.services import vemezo
+from app.services.w3_poa import make_http_web3
 
 load_dotenv()
-from web3.middleware import ExtraDataToPOAMiddleware
 
 # ---- Config ----
 RPC_URL = os.getenv("MEZO_TESTNET_RPC_URL", "https://rpc.test.mezo.org")
@@ -39,10 +39,7 @@ class LockResult(TypedDict):
 
 def _w3() -> Web3:
     """Build a Web3 client for Mezo testnet."""
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
-    # Mezo is Cosmos SDK underneath. PoA middleware handles non-standard fields.
-    w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-    return w3
+    return make_http_web3(RPC_URL)
 
 
 def _vebtc_contract(w3: Web3):

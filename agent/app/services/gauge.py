@@ -4,7 +4,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from web3 import Web3
-from web3.middleware import ExtraDataToPOAMiddleware
+
+from app.services.w3_poa import make_http_web3
 
 load_dotenv()
 
@@ -19,9 +20,7 @@ with open(ABI_PATH) as f:
 
 
 def _w3() -> Web3:
-    w3 = Web3(Web3.HTTPProvider(RPC_URL))
-    w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-    return w3
+    return make_http_web3(RPC_URL)
 
 
 def _gauge_contract(w3: Web3):
