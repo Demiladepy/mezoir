@@ -1,66 +1,39 @@
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useEffect, useState } from "react";
-import { Footer } from "@/components/footer";
 import { IntentPicker } from "@/components/intent-picker";
 import { LiveActivity } from "@/components/live-activity";
-import { Web3Provider } from "@/components/providers/web3-provider";
+import { Footer } from "@/components/footer";
 
 export function WalletHome() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
-    <Web3Provider>
-      <div className="flex min-h-full flex-1 flex-col bg-slate-50">
-        <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
-          <header className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Mezoir
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-700 sm:text-xl">
-              An intent-based agent for Mezo&apos;s ve-economy. Tell it your goal
-              — it picks the venue and acts.
-            </p>
-            <div className="mt-5 flex justify-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm">
-                <span
-                  className="h-2 w-2 rounded-full bg-emerald-500"
-                  aria-hidden
-                />
-                Mezo Testnet
-              </span>
-            </div>
-          </header>
-
-          <div className="mt-10 flex justify-center">
-            {mounted ? (
-              <ConnectButton label="Connect Wallet" />
-            ) : (
-              <button
-                type="button"
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 shadow-sm"
-              >
-                Connect Wallet
-              </button>
-            )}
+    <div className="flex flex-col gap-10">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/50 px-6 py-8 text-center shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] sm:px-10">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-cyan-500/10" />
+        <div className="relative">
+          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            Intent-based ve strategy
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
+            Tell Mezoir your goal — it reads chain state, chooses venues, and
+            executes locks, manager auth, and gauge votes on Mezo testnet.
+          </p>
+          <div className="mt-4 flex justify-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-emerald-400">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                aria-hidden
+              />
+              Mezo testnet
+            </span>
           </div>
-
-          <div className="mt-10">
-            <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
-              <div className="flex justify-center">
-                <IntentPicker />
-              </div>
-            </div>
-          </div>
-
-          <LiveActivity />
         </div>
+      </section>
 
-        <Footer />
-      </div>
-    </Web3Provider>
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/70 p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_12px_40px_rgba(0,0,0,0.35)] sm:p-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
+        <IntentPicker />
+      </section>
+
+      <LiveActivity />
+      <Footer />
+    </div>
   );
 }

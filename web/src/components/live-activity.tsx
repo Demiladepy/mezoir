@@ -30,16 +30,16 @@ function isValidPosition(row: LockInfo | null): row is LockInfo {
 
 function LiveActivitySkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {TOKEN_IDS.map((id) => (
         <div
           key={id}
-          className="animate-pulse rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+          className="animate-pulse rounded-xl border border-white/5 bg-zinc-900/50 p-4"
         >
-          <div className="h-4 w-16 rounded bg-slate-200" />
-          <div className="mt-3 h-3 w-full rounded bg-slate-100" />
-          <div className="mt-2 h-3 w-2/3 rounded bg-slate-100" />
-          <div className="mt-2 h-3 w-1/2 rounded bg-slate-100" />
+          <div className="h-3 w-16 rounded bg-white/10" />
+          <div className="mt-3 h-3 w-full rounded bg-white/5" />
+          <div className="mt-2 h-3 w-2/3 rounded bg-white/5" />
+          <div className="mt-2 h-3 w-1/2 rounded bg-white/5" />
         </div>
       ))}
     </div>
@@ -85,34 +85,43 @@ export function LiveActivity() {
   const valid = rows.filter(isValidPosition);
 
   return (
-    <section className="py-12">
-      <h2 className="text-lg font-semibold tracking-tight text-slate-700">
-        Recent positions managed
-      </h2>
-      <p className="mt-1 text-sm text-slate-500">
-        On-chain reads for token IDs 1–5 (refreshes every 30s).
-      </p>
-      <div className="mt-6">
+    <section>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-semibold tracking-tight text-white">
+            Recent positions
+          </h2>
+          <p className="mt-0.5 text-xs text-slate-500">
+            On-chain reads · token IDs 1–5 · 30s refresh
+          </p>
+        </div>
+      </div>
+      <div>
         {loading ? (
           <LiveActivitySkeleton />
         ) : valid.length === 0 ? (
-          <p className="rounded-xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+          <p className="rounded-xl border border-white/10 bg-zinc-900/50 px-6 py-8 text-center text-sm text-slate-500">
             No position data yet. Run the agent to create locks on testnet.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {valid.map((row) => (
               <article
                 key={row.token_id}
-                className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="group rounded-xl border border-white/10 bg-zinc-900/60 p-4 transition-all hover:border-orange-500/20 hover:shadow-[0_0_24px_rgba(247,147,26,0.08)]"
               >
-                <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Token #{row.token_id}
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                    Token
+                  </span>
+                  <span className="font-mono text-sm font-medium text-orange-400">
+                    #{row.token_id}
+                  </span>
                 </div>
-                <dl className="mt-3 space-y-2 text-sm">
+                <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                   <div>
                     <dt className="text-slate-500">Amount</dt>
-                    <dd className="font-medium text-slate-800">
+                    <dd className="mt-0.5 font-medium tabular-nums text-slate-200">
                       {row.amount_btc != null
                         ? `${row.amount_btc.toFixed(6)} BTC`
                         : row.amount_wei != null
@@ -121,22 +130,20 @@ export function LiveActivity() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Unlock</dt>
-                    <dd className="text-slate-800">
-                      {row.unlock_time != null
-                        ? new Date(
-                            row.unlock_time * 1000,
-                          ).toLocaleString(undefined, {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })
-                        : "—"}
+                    <dt className="text-slate-500">Owner</dt>
+                    <dd className="mt-0.5 font-mono text-[11px] text-slate-400">
+                      {shortenOwner(row.owner)}
                     </dd>
                   </div>
-                  <div>
-                    <dt className="text-slate-500">Owner</dt>
-                    <dd className="font-mono text-xs text-slate-700">
-                      {shortenOwner(row.owner)}
+                  <div className="col-span-2">
+                    <dt className="text-slate-500">Unlock</dt>
+                    <dd className="mt-0.5 text-slate-300">
+                      {row.unlock_time != null
+                        ? new Date(row.unlock_time * 1000).toLocaleString(
+                            undefined,
+                            { dateStyle: "medium", timeStyle: "short" },
+                          )
+                        : "—"}
                     </dd>
                   </div>
                 </dl>

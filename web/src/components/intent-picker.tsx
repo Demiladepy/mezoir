@@ -357,11 +357,11 @@ export function IntentPicker() {
   }
 
   return (
-    <div className="flex w-full max-w-lg flex-col gap-5 text-left transition-all duration-300">
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-5 text-left transition-all duration-300">
       <div className="flex flex-col gap-2">
         <label
           htmlFor="intent-select"
-          className="text-sm font-medium text-slate-700"
+          className="text-sm font-medium text-slate-300"
         >
           Intent
         </label>
@@ -369,7 +369,7 @@ export function IntentPicker() {
           id="intent-select"
           value={intent}
           onChange={(e) => setIntent(e.target.value)}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm transition-colors focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+          className="rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 shadow-sm transition-colors focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
         >
           {PRESET_INTENTS.map((s) => (
             <option key={s} value={s}>
@@ -382,7 +382,7 @@ export function IntentPicker() {
       <div className="flex flex-col gap-2">
         <label
           htmlFor="amount-btc"
-          className="text-sm font-medium text-slate-700"
+          className="text-sm font-medium text-slate-300"
         >
           Amount (BTC)
         </label>
@@ -393,7 +393,7 @@ export function IntentPicker() {
           step={0.0001}
           value={amountBtc}
           onChange={(e) => setAmountBtc(Number(e.target.value))}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm transition-colors focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+          className="rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2.5 text-sm text-zinc-100 shadow-sm transition-colors focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
         />
       </div>
 
@@ -401,7 +401,7 @@ export function IntentPicker() {
         type="button"
         onClick={handleSubmit}
         disabled={status === "streaming"}
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-orange-600 disabled:pointer-events-none disabled:opacity-60"
+        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-medium text-white shadow-[0_0_24px_rgba(247,147,26,0.25)] transition-all hover:from-orange-400 hover:to-orange-500 disabled:pointer-events-none disabled:opacity-60"
       >
         {status === "streaming" ? (
           <>
@@ -416,7 +416,7 @@ export function IntentPicker() {
       {(status === "streaming" || status === "done" || status === "error") && (
         <div className="mt-1 flex flex-col gap-6">
           {chainSnapshot && (
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600 shadow-sm">
+            <div className="rounded-xl border border-white/5 bg-zinc-950/50 p-4 text-sm text-slate-400 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Chain state at execution
               </div>
@@ -438,7 +438,7 @@ export function IntentPicker() {
               {decisions.map((decision) => (
                 <div
                   key={decision.step}
-                  className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-white/10 bg-zinc-950/80 p-4 shadow-sm"
                 >
                   <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Decision: {decision.step.replace("_", " ")}
@@ -452,10 +452,10 @@ export function IntentPicker() {
                           key={opt.id}
                           className={`relative rounded-lg border p-3 transition-all duration-300 ${
                             chosen
-                              ? "border-orange-500 shadow-sm ring-1 ring-orange-200"
+                              ? "border-orange-500/80 shadow-[0_0_20px_rgba(247,147,26,0.15)] ring-1 ring-orange-500/30"
                               : decided
-                                ? "border-slate-200 opacity-60"
-                                : "border-slate-200"
+                                ? "border-white/5 opacity-50"
+                                : "border-white/10"
                           }`}
                         >
                           {chosen && (
@@ -463,18 +463,18 @@ export function IntentPicker() {
                               Selected
                             </span>
                           )}
-                          <div className="pr-16 text-sm font-medium text-slate-800">
+                          <div className="pr-16 text-sm font-medium text-zinc-100">
                             {opt.label}
                           </div>
-                          <div className="mt-2 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-700">
+                          <div className="mt-2 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-300">
                             {opt.score.toFixed(2)}
                           </div>
-                          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-green-700">
+                          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-emerald-400/90">
                             {opt.pros.map((p, i) => (
                               <li key={`${opt.id}-pro-${i}`}>{p}</li>
                             ))}
                           </ul>
-                          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-600">
+                          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-500">
                             {opt.cons.map((c, i) => (
                               <li key={`${opt.id}-con-${i}`}>{c}</li>
                             ))}
@@ -484,7 +484,7 @@ export function IntentPicker() {
                     })}
                   </div>
                   {decision.rationale && (
-                    <p className="mt-3 italic text-slate-700">
+                    <p className="mt-3 italic text-slate-300">
                       Why: {decision.rationale}
                     </p>
                   )}
@@ -494,15 +494,15 @@ export function IntentPicker() {
           )}
 
           {parsedIntent && (
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
+            <div className="rounded-xl border border-white/5 bg-zinc-950/50 p-4 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Parsed intent
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-800 shadow-sm ring-1 ring-slate-200">
+                <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs font-medium text-slate-200">
                   {parsedIntent.profile}
                 </span>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-800 shadow-sm ring-1 ring-slate-200">
+                <span className="rounded-full border border-white/10 bg-zinc-900 px-3 py-1 text-xs font-medium text-slate-200">
                   {parsedIntent.priority}
                 </span>
               </div>
@@ -510,14 +510,14 @@ export function IntentPicker() {
             </div>
           )}
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <div className="rounded-xl border border-white/10 bg-zinc-950/60 p-4 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">
               Agent activity
             </div>
             <div
               ref={logContainerRef}
               aria-live="polite"
-              className="mt-3 max-h-64 overflow-y-auto rounded-xl bg-slate-50 p-4 font-mono text-sm text-slate-700 sm:max-h-80"
+              className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-white/5 bg-black/30 p-4 font-mono text-sm text-slate-300 sm:max-h-80"
             >
               {logs.length === 0 ? (
                 <p className="text-slate-500">Waiting for first events...</p>
@@ -547,22 +547,22 @@ export function IntentPicker() {
             {actions.map((a) => (
               <div
                 key={`${a.action}-${a.started}-${a.finished}-${a.tx_hash ?? a.error ?? ""}`}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="rounded-xl border border-white/10 bg-zinc-950/80 p-4 shadow-sm"
               >
                 <div className="flex items-start gap-3">
                   {a.started && !a.finished ? (
                     <Spinner className="mt-0.5 h-4 w-4 animate-spin text-slate-400" />
                   ) : a.success === true ? (
-                    <span className="text-lg text-green-600" aria-hidden>
+                    <span className="text-lg text-emerald-400" aria-hidden>
                       ✓
                     </span>
                   ) : (
-                    <span className="text-lg text-red-500" aria-hidden>
+                    <span className="text-lg text-red-400" aria-hidden>
                       ✗
                     </span>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold text-slate-800">
+                    <div className="font-semibold text-zinc-100">
                       {actionLabel(a.action)}
                     </div>
                     {a.tx_hash && a.explorer_url && (
@@ -576,14 +576,14 @@ export function IntentPicker() {
                       </a>
                     )}
                     {a.error && (
-                      <p className="mt-2 text-sm text-red-700">
+                      <p className="mt-2 text-sm text-red-400">
                         {friendlyActionError(a.action, a.error)}
                       </p>
                     )}
                     {a.action === "vote_gauge" &&
                       a.vote_token_id != null &&
                       a.vote_weight != null && (
-                        <div className="mt-2 text-sm text-slate-700">
+                        <div className="mt-2 text-sm text-slate-300">
                           <p>
                             Voted with veMEZO #{a.vote_token_id} on{" "}
                             {a.vote_gauge_name ?? "MUSD/BTC LP"}
@@ -595,10 +595,10 @@ export function IntentPicker() {
                         </div>
                       )}
                     <div className="mt-2 flex flex-wrap items-start gap-2">
-                      <span className="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-700">
+                      <span className="shrink-0 rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-300">
                         AI reasoning
                       </span>
-                      <p className="min-w-0 flex-1 text-sm leading-relaxed text-slate-600">
+                      <p className="min-w-0 flex-1 text-sm leading-relaxed text-slate-400">
                         {a.rationale}
                       </p>
                     </div>
@@ -609,8 +609,8 @@ export function IntentPicker() {
           </div>
 
           {explanation && (
-            <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm leading-relaxed text-slate-700 shadow-sm">
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-700">
+            <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm leading-relaxed text-slate-300">
+              <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-400">
                 What just happened
               </div>
               {explanation}
@@ -618,7 +618,7 @@ export function IntentPicker() {
           )}
 
           {status === "error" && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-red-500/30 bg-red-950/40 p-3 text-sm text-red-300">
               {errorMessage}
             </div>
           )}
