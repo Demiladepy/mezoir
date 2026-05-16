@@ -748,10 +748,6 @@ export function IntentPicker() {
         </div>
       )}
 
-      <p className="border-t border-[#e3e8ee] px-6 py-4 text-center text-xs text-[#697386] lg:px-8">
-        Mezoir runs on Mezo Testnet. All transactions are verifiable on the
-        explorer.
-      </p>
     </section>
   );
 }

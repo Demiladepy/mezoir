@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_APP_NAME?: string;
   readonly VITE_WALLETCONNECT_PROJECT_ID?: string;
   readonly VITE_VEBTC_PROXY_ADDRESS?: string;
+  readonly VITE_GITHUB_URL?: string;
 }
 
 interface ImportMeta {

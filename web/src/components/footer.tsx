@@ -1,14 +1,65 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+
+import { Logo } from "@/components/logo";
 
 const EXPLORER = "https://explorer.test.mezo.org";
+const MEZO = "https://mezo.org";
 
-const MOCK_VEBTC_ADDRESS =
+const VEBTC_ADDRESS =
   import.meta.env.VITE_VEBTC_PROXY_ADDRESS ??
   "0x1C77C4ABD2295c88A8C99647B25345879624ac57";
+
+const GITHUB_URL = import.meta.env.VITE_GITHUB_URL?.trim() || "";
 
 function shortenAddr(addr: string) {
   if (!addr || addr.length < 12) return addr;
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  const external = href.startsWith("http");
+  return (
+    <a
+      href={href}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      className="group inline-flex items-center gap-1 text-sm text-[#425466] transition-colors hover:text-[#0a2540]"
+    >
+      <span className="border-b border-transparent transition-colors group-hover:border-[#f7931a]">
+        {children}
+      </span>
+      {external && (
+        <span
+          className="text-[#697386] transition-colors group-hover:text-[#f7931a]"
+          aria-hidden
+        >
+          ↗
+        </span>
+      )}
+    </a>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      aria-hidden
+    >
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.25" />
+      <path d="M10.5 5.5V3.75A1.25 1.25 0 0 0 9.25 2.5H3.75A1.25 1.25 0 0 0 2.5 3.75v5.5A1.25 1.25 0 0 0 3.75 10.5H5.5" />
+    </svg>
+  );
 }
 
 export function Footer() {
@@ -16,7 +67,7 @@ export function Footer() {
 
   async function copyAddress() {
     try {
-      await navigator.clipboard.writeText(MOCK_VEBTC_ADDRESS);
+      await navigator.clipboard.writeText(VEBTC_ADDRESS);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -25,44 +76,80 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t border-[#e3e8ee] py-8 text-center text-sm text-[#697386]">
-      <p className="text-[#425466]">Mezoir · Mezo Hackathon 2026 · Testnet</p>
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-        <a
-          href={EXPLORER}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#f7931a] transition-colors hover:text-[#e08813]"
-        >
-          Explorer
-        </a>
-        <span className="hidden text-[#e3e8ee] sm:inline" aria-hidden>
-          |
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-[#697386]">MockVeBTC</span>
-          <code className="rounded border border-[#e3e8ee] bg-white px-2 py-0.5 font-mono text-[11px] text-[#0a2540]">
-            {shortenAddr(MOCK_VEBTC_ADDRESS)}
-          </code>
-          <button
-            type="button"
-            onClick={copyAddress}
-            className="rounded-md border border-[#e3e8ee] bg-white px-2 py-1 text-xs text-[#425466] transition-colors hover:border-[#f7931a]/40 hover:text-[#f7931a]"
-          >
-            {copied ? "Copied" : "Copy"}
-          </button>
+    <footer className="mt-2">
+      <div className="mb-8 h-px w-full bg-gradient-to-r from-transparent via-[#f7931a]/25 to-transparent" />
+
+      <div className="overflow-hidden rounded-2xl border border-[#e3e8ee] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+        <div className="grid gap-8 p-6 lg:grid-cols-12 lg:gap-10 lg:p-8">
+          <div className="lg:col-span-5">
+            <Logo size="sm" />
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-[#425466]">
+              State your intent once. Mezoir reads ve positions, compares lock
+              paths, and executes on Mezo testnet—with a plain-English audit trail.
+            </p>
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#e3e8ee] bg-[#fafbff] px-3 py-1.5">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]"
+                aria-hidden
+              />
+              <span className="text-xs font-medium text-[#425466]">
+                Mezo testnet · real transactions
+              </span>
+            </div>
+          </div>
+
+          <div className="lg:col-span-3">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              Resources
+            </p>
+            <nav className="mt-4 flex flex-col gap-2.5">
+              <FooterLink href={EXPLORER}>Block explorer</FooterLink>
+              <FooterLink href={MEZO}>Mezo</FooterLink>
+              {GITHUB_URL ? (
+                <FooterLink href={GITHUB_URL}>Source code</FooterLink>
+              ) : null}
+            </nav>
+          </div>
+
+          <div className="lg:col-span-4">
+            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              On-chain
+            </p>
+            <div className="mt-4 rounded-xl border border-[#e3e8ee] bg-[#fafbff] p-4">
+              <p className="text-xs text-[#697386]">VeBTC contract (testnet)</p>
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <code className="truncate font-mono text-xs text-[#0a2540]">
+                  {shortenAddr(VEBTC_ADDRESS)}
+                </code>
+                <button
+                  type="button"
+                  onClick={copyAddress}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#e3e8ee] bg-white px-2.5 py-1.5 text-xs font-medium text-[#425466] shadow-sm transition-all duration-200 hover:border-[#f7931a]/30 hover:text-[#f7931a] hover:shadow-md"
+                  aria-label={copied ? "Address copied" : "Copy contract address"}
+                >
+                  <CopyIcon />
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <a
+                href={`${EXPLORER}/address/${VEBTC_ADDRESS}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#f7931a] transition-colors hover:text-[#e08813]"
+              >
+                View on explorer
+                <span aria-hidden>↗</span>
+              </a>
+            </div>
+          </div>
         </div>
-        <span className="hidden text-[#e3e8ee] sm:inline" aria-hidden>
-          |
-        </span>
-        <a
-          href="#"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#425466] transition-colors hover:text-[#0a2540]"
-        >
-          GitHub
-        </a>
+
+        <div className="flex flex-col gap-2 border-t border-[#e3e8ee] bg-[#fafbff]/60 px-6 py-4 text-xs text-[#697386] sm:flex-row sm:items-center sm:justify-between lg:px-8">
+          <p>© 2026 Mezoir · Mezo Hackathon 2026 — MEZO Track</p>
+          <p className="text-[#697386]">
+            Testnet demo · not financial advice
+          </p>
+        </div>
       </div>
     </footer>
   );
