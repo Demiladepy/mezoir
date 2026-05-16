@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { AGENT_URL } from "@/lib/agent-url";
 
+const EXPLORER = "https://explorer.test.mezo.org";
+
 interface DashboardData {
   btc_positions: number;
   btc_total_locked: number;
@@ -10,6 +12,17 @@ interface DashboardData {
   gauge_total_votes_wei: string;
   operator_address: string;
   block_number: number;
+  data_source?: "goldsky" | "rpc";
+}
+
+function StatSkeleton() {
+  return (
+    <div className="rounded-lg bg-[#f1f5f9] p-4 animate-pulse">
+      <div className="mb-2 h-3 w-16 rounded bg-[#e3e8ee]" />
+      <div className="h-8 w-12 rounded bg-[#e3e8ee]" />
+      <div className="mt-2 h-3 w-24 rounded bg-[#e3e8ee]" />
+    </div>
+  );
 }
 
 export function Dashboard() {
@@ -36,7 +49,7 @@ export function Dashboard() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-500/20 bg-red-950/30 px-4 py-3 text-center text-sm text-red-300">
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-center text-sm text-red-700">
         {error}
       </div>
     );
@@ -44,93 +57,130 @@ export function Dashboard() {
 
   if (!data) {
     return (
-      <div className="animate-pulse rounded-xl border border-white/5 bg-zinc-900/40 px-6 py-8 text-center text-sm text-slate-500">
-        Loading positions…
-      </div>
+      <section className="rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm lg:p-8">
+        <div className="mb-6 h-3 w-28 animate-pulse rounded bg-[#f1f5f9]" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <StatSkeleton key={i} />
+          ))}
+        </div>
+      </section>
     );
   }
 
   const formatMezo = (wei: string) => (Number(wei) / 1e18).toFixed(4);
+  const gaugeLabel =
+    data.active_votes.length > 0
+      ? data.active_votes[0].gauge_name
+      : "—";
+
+  const indexLabel =
+    data.data_source === "goldsky"
+      ? "indexed via Goldsky"
+      : data.data_source === "rpc"
+        ? "via RPC"
+        : "refreshed every 15s";
+
+  const indexDot =
+    data.data_source === "goldsky"
+      ? "bg-emerald-500"
+      : data.data_source === "rpc"
+        ? "bg-amber-500"
+        : "bg-[#697386]/40";
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/80 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-orange-500/50 via-cyan-500/30 to-transparent" />
-      <div className="border-b border-white/5 px-5 py-4 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-slate-500">
-              Live positions
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Operator agent wallet · polled every 15s
-            </p>
-          </div>
-          <span className="font-mono text-[11px] text-cyan-400/80">
-            block {data.block_number}
-          </span>
-        </div>
+    <section className="rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm transition-shadow hover:shadow-md lg:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+          Live positions
+        </h2>
+        <p className="flex items-center gap-2 font-mono text-xs text-[#697386]">
+          {data.data_source != null && (
+            <span
+              className={`h-1.5 w-1.5 shrink-0 rounded-full ${indexDot}`}
+              aria-hidden
+            />
+          )}
+          Block {data.block_number}
+          <span className="text-[#e3e8ee]">·</span>
+          {indexLabel}
+        </p>
       </div>
 
-      <div className="grid gap-px bg-white/5 sm:grid-cols-2">
-        <div className="bg-zinc-950/40 px-5 py-4 sm:px-6">
-          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-orange-400/90">
+      <div className="mt-6 grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8">
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
             veBTC
           </p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-white">
+          <p className="text-3xl font-semibold tracking-tight text-[#0a2540] lg:text-4xl">
             {data.btc_positions}
           </p>
-          <p className="mt-0.5 text-sm text-slate-400">
-            {Number(data.btc_total_locked ?? 0).toFixed(4)}{" "}
-            <span className="text-slate-500">BTC locked</span>
+          <p className="mt-1 text-sm text-[#425466]">
+            {Number(data.btc_total_locked ?? 0).toFixed(4)} BTC locked
           </p>
         </div>
-        <div className="border-t border-white/5 bg-zinc-950/40 px-5 py-4 sm:border-t-0 sm:border-l sm:px-6">
-          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-cyan-400/90">
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
             veMEZO
           </p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-white">
+          <p className="text-3xl font-semibold tracking-tight text-[#0a2540] lg:text-4xl">
             {data.mezo_positions}
           </p>
-          <p className="mt-0.5 text-sm text-slate-400">
-            {Number(data.mezo_total_locked ?? 0).toFixed(4)}{" "}
-            <span className="text-slate-500">MEZO locked</span>
+          <p className="mt-1 text-sm text-[#425466]">
+            {Number(data.mezo_total_locked ?? 0).toFixed(4)} MEZO locked
           </p>
+        </div>
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
+            Active votes
+          </p>
+          <p className="text-3xl font-semibold tracking-tight text-[#0a2540] lg:text-4xl">
+            {data.active_votes.length}
+          </p>
+          <p className="mt-1 truncate text-sm text-[#425466]">{gaugeLabel}</p>
+        </div>
+        <div>
+          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
+            Operator
+          </p>
+          <p className="font-mono text-xl font-semibold tracking-tight text-[#0a2540] lg:text-2xl">
+            {data.operator_address?.slice(0, 6)}…{data.operator_address?.slice(-4)}
+          </p>
+          <p className="mt-1 text-sm text-[#425466]">Agent wallet</p>
         </div>
       </div>
 
       {data.active_votes.length > 0 && (
-        <div className="border-t border-white/5 px-5 py-4 sm:px-6">
-          <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
-            Active votes
+        <div className="mt-6 border-t border-[#e3e8ee] pt-6">
+          <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+            Vote allocations
           </p>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 divide-y divide-[#e3e8ee]">
             {data.active_votes.map((v) => (
               <li
                 key={v.token_id}
-                className="flex items-center justify-between gap-4 rounded-lg border border-white/5 bg-zinc-950/50 px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-4 py-2"
               >
-                <span className="text-slate-300">
-                  veMEZO #{v.token_id}{" "}
-                  <span className="text-slate-500">→</span>{" "}
-                  <span className="font-medium text-white">{v.gauge_name}</span>
-                </span>
-                <span className="shrink-0 font-mono text-xs text-cyan-400/90">
+                <div>
+                  <p className="font-medium text-[#0a2540]">{v.gauge_name}</p>
+                  <p className="text-sm text-[#697386]">veMEZO #{v.token_id}</p>
+                </div>
+                <a
+                  href={EXPLORER}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 font-mono text-sm text-[#0a2540] transition-colors hover:text-[#f7931a]"
+                >
                   {formatMezo(v.weight_wei)} wt
-                </span>
+                  <span className="text-[#f7931a]" aria-hidden>
+                    ↗
+                  </span>
+                </a>
               </li>
             ))}
           </ul>
         </div>
       )}
-
-      <div className="border-t border-white/5 px-5 py-3 sm:px-6">
-        <p className="font-mono text-[11px] text-slate-500">
-          operator{" "}
-          <span className="text-slate-400">
-            {data.operator_address?.slice(0, 6)}…{data.operator_address?.slice(-4)}
-          </span>
-        </p>
-      </div>
     </section>
   );
 }

@@ -11,13 +11,13 @@ const WalletHome = lazy(() =>
 export default function App() {
   return (
     <Web3Provider>
-      <div className="min-h-screen bg-zinc-950 font-sans text-slate-100">
+      <div className="min-h-screen bg-[#fafbff] font-sans text-[#0a2540]">
         <Header />
-        <main className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-16 pt-8 lg:space-y-12 lg:px-8">
           <Dashboard />
           <Suspense
             fallback={
-              <div className="rounded-xl border border-white/10 bg-zinc-900/60 py-12 text-center text-sm text-slate-500">
+              <div className="rounded-2xl border border-[#e3e8ee] bg-white py-12 text-center text-sm text-[#697386] shadow-sm">
                 Loading wallet…
               </div>
             }

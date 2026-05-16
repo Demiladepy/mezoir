@@ -25,43 +25,41 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t border-white/10 py-8 text-center text-sm text-slate-500">
-      <p className="text-slate-400">
-        Mezoir · Mezo Hackathon 2026 · Testnet
-      </p>
+    <footer className="border-t border-[#e3e8ee] py-8 text-center text-sm text-[#697386]">
+      <p className="text-[#425466]">Mezoir · Mezo Hackathon 2026 · Testnet</p>
       <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
         <a
           href={EXPLORER}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-orange-400 transition-colors hover:text-orange-300"
+          className="text-[#f7931a] transition-colors hover:text-[#e08813]"
         >
           Explorer
         </a>
-        <span className="hidden text-white/10 sm:inline" aria-hidden>
+        <span className="hidden text-[#e3e8ee] sm:inline" aria-hidden>
           |
         </span>
         <div className="flex items-center gap-2">
-          <span className="text-slate-500">MockVeBTC</span>
-          <code className="rounded border border-white/10 bg-zinc-900 px-2 py-0.5 font-mono text-[11px] text-slate-300">
+          <span className="text-[#697386]">MockVeBTC</span>
+          <code className="rounded border border-[#e3e8ee] bg-white px-2 py-0.5 font-mono text-[11px] text-[#0a2540]">
             {shortenAddr(MOCK_VEBTC_ADDRESS)}
           </code>
           <button
             type="button"
             onClick={copyAddress}
-            className="rounded-md border border-white/10 bg-zinc-900 px-2 py-1 text-xs text-slate-400 transition-colors hover:border-orange-500/40 hover:text-orange-400"
+            className="rounded-md border border-[#e3e8ee] bg-white px-2 py-1 text-xs text-[#425466] transition-colors hover:border-[#f7931a]/40 hover:text-[#f7931a]"
           >
             {copied ? "Copied" : "Copy"}
           </button>
         </div>
-        <span className="hidden text-white/10 sm:inline" aria-hidden>
+        <span className="hidden text-[#e3e8ee] sm:inline" aria-hidden>
           |
         </span>
         <a
           href="#"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-cyan-400/90 transition-colors hover:text-cyan-300"
+          className="text-[#425466] transition-colors hover:text-[#0a2540]"
         >
           GitHub
         </a>
