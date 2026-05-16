@@ -23,25 +23,15 @@ from app.services.strategy import (
 
 load_dotenv()
 
-_DEFAULT_CORS_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://localhost:3002",
-    "http://localhost:3003",
-    "http://localhost:3004",
-    "https://mezoir.vercel.app",
-]
-_extra_cors = [
-    o.strip()
-    for o in os.getenv("CORS_ORIGINS", "").split(",")
-    if o.strip()
-]
-
 app = FastAPI(title="Mezoir Agent Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_DEFAULT_CORS_ORIGINS + _extra_cors,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://mezoir.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
