@@ -253,7 +253,7 @@ def get_lock_info(token_id: int) -> dict:
     voting_power_wei: Optional[str] = None
 
     try:
-        o = contract.functions.owner_of(token_id).call()
+        o = contract.functions.ownerOf(token_id).call()
         owner = Web3.to_checksum_address(o)
     except Exception:
         pass
@@ -279,7 +279,7 @@ def get_lock_info(token_id: int) -> dict:
             pass
 
     try:
-        vp = contract.functions.balance_of_nft(token_id).call()
+        vp = contract.functions.balanceOfNFT(token_id).call()
         voting_power_wei = str(int(vp))
     except Exception:
         pass

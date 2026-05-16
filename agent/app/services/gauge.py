@@ -52,6 +52,12 @@ def cast_vote(token_id: int, weight: int) -> dict:
 
 
 def get_gauge_state() -> dict:
+    if not GAUGE_ADDRESS:
+        return {
+            "gauge_name": None,
+            "vemezo_address": None,
+            "total_votes": 0,
+        }
     w3 = _w3()
     contract = _gauge_contract(w3)
     try:
@@ -76,6 +82,8 @@ def get_gauge_state() -> dict:
 
 def get_vote_for_token(token_id: int) -> int:
     """Returns the weight this tokenId has voted with on the gauge. 0 if no vote."""
+    if not GAUGE_ADDRESS:
+        return 0
     w3 = _w3()
     contract = _gauge_contract(w3)
     try:

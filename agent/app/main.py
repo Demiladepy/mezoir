@@ -5,9 +5,9 @@ from datetime import datetime, timezone
 from typing import TypedDict
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel, Field
 
@@ -36,6 +36,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
+    """Return JSON (with CORS headers) instead of a plain-text 500 the browser blocks."""
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
 def _explorer_tx_url(tx_hash: str) -> str:
@@ -167,7 +175,10 @@ def set_allowed_manager_endpoint(req: SetAllowedManagerRequest):
 
 @app.get("/agent/lock/{token_id}")
 def lock_info_endpoint(token_id: int):
-    return vebtc.get_lock_info(token_id)
+    try:
+        return vebtc.get_lock_info(token_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/agent/lock_mezo/{token_id}")
@@ -177,6 +188,13 @@ def lock_info_mezo_endpoint(token_id: int):
 
 @app.get("/agent/dashboard")
 async def get_dashboard():
+    try:
+        return await _build_dashboard()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+async def _build_dashboard() -> dict:
     operator = os.getenv("AGENT_OPERATOR_ADDRESS", "").strip()
     if operator:
         try:
