@@ -1,256 +1,212 @@
 # Mezoir
 
-**An intent-based agent that runs your full position in Mezo's ve-economy. You state your goal; Mezoir picks the venue, posts the action, and explains what it did.**
+**Intent-based agent for Mezo's ve-economy.**  
+You state a goal → the agent reads chain state → picks actions → executes on testnet → explains why.
 
-Built for the Mezo Hackathon 2026 — MEZO Track.
+Mezo Hackathon 2026 · MEZO Track
 
----
-
-## Why Mezoir exists
-
-Mezo's economy is genuinely powerful and genuinely complex. To earn well, a user has to understand veBTC, veMEZO, gauges, the matching market, epochs, boost ratios, and now a secondary marketplace for locked positions. Most people will never bother. They'll deposit BTC into a single passive vault and accept whatever it gives them.
-
-Mezoir collapses all of that into one sentence: *what do you want?*
-
-You say "maximize my BTC yield" or "I'm MEZO-heavy, optimize my voting returns." Mezoir reads the state of every gauge, every incentive, every listing on the secondary market, and decides — every epoch — what to do with your capital. It executes on your behalf and explains its reasoning in plain English.
-
-> *"As software agents become more capable of executing financial actions independently, they will need reliable settlement layers and programmable access to capital. This places Mezo at the intersection of BitcoinFi and the emerging agent economy."*
-> — Supernormal Foundation, Mezo 2026 Roadmap
-
-Mezoir is one such agent.
+| | |
+|---|---|
+| **Live app** | [mezoir.vercel.app](https://mezoir.vercel.app) |
+| **Agent API** | [mezoir-1.onrender.com](https://mezoir-1.onrender.com) |
+| **Explorer** | [explorer.test.mezo.org](https://explorer.test.mezo.org) |
+| **Network** | Mezo testnet (Matsnet) |
 
 ---
 
-## How it works
+## Contents
 
-**1. Connect.** Wallet connects via Mezo Passport — supports both native Bitcoin wallets and EVM wallets.
-
-**2. State your intent.** Choose from preset strategies or describe a custom goal:
-- *Maximize my BTC-denominated yield*
-- *Maximize my returns from voting (MEZO-heavy)*
-- *Balanced — optimize across both*
-- *Park me defensively*
-- Or describe your own constraints
-
-**3. Authorize and set guardrails.** Approve Mezoir's contracts. Set limits — max % of position to deploy, alert thresholds, manual-approval thresholds for big moves.
-
-**4. Done.** Mezoir runs every epoch. You get a weekly summary explaining what happened and why.
+- [What it does](#what-it-does)
+- [System design](#system-design)
+- [Repo map](#repo-map)
+- [Quick start](#quick-start)
+- [API surface](#api-surface)
+- [Stack](#stack)
+- [Roadmap](#roadmap)
 
 ---
 
-## What Mezoir actually does
+## What it does
 
-Mezoir operates across two venues, picking the optimal action each epoch.
+| Step | You | Mezoir |
+|------|-----|--------|
+| 1 | Connect wallet (Mezo Passport) | — |
+| 2 | Pick intent + amount | Parses goal into profile + priority |
+| 3 | Click **Run agent** | Streams decisions, rationale, actions (SSE) |
+| 4 | — | Locks veBTC/veMEZO, authorizes manager, votes gauges |
+| 5 | Read explanation | Plain-English audit trail + tx links |
 
-### Matching market (Matchbox)
-- Locks BTC and MEZO into veBTC and veMEZO positions
-- Pairs them for self-boost
-- Posts incentives on its own gauge to attract veMEZO votes (BTC-heavy strategies)
-- Votes veMEZO on the highest-paying gauges (MEZO-heavy strategies)
+**Preset intents**
 
-### Secondary marketplace (veNFT trading)
-- Buys discounted veBTC or veMEZO NFTs when expected return beats locking new tokens
-- Sells positions when overpriced relative to remaining yield
-- Arbitrages between venues when their pricing diverges
+| Intent | Profile |
+|--------|---------|
+| Maximize my BTC yield | `btc_heavy` |
+| I'm MEZO-heavy, optimize voting returns | `mezo_heavy` |
+| Balanced: optimize across both | `balanced` |
+| Park me defensively | `defensive` |
 
-The interesting decision is venue selection — *should I lock new BTC, or buy a veBTC NFT trading at a discount?* That's a math problem Mezoir solves continuously, with reasoning the user can read.
-
----
-
-## Differentiation
-
-|  | Boar Finance | Plain veNFT marketplace | **Mezoir** |
-|---|---|---|---|
-| What it does | Auto-votes veBTC | Lists veNFTs | Operates across both venues |
-| Strategies | One (BTC-heavy) | None | Multiple, intent-based |
-| Action space | Vote allocation | Buy/sell only | Lock, vote, post incentives, buy, sell, arbitrage |
-| Customization | None | None | Personalized to user intent |
-| Decision logic | Fee/emission rebalancing | None | Reasons over goals; selects venue and action |
-
-Mezoir is the only product on Mezo that operates across the full ve-economy with personalized intent.
+**Why it exists** — Mezo's ve stack (veBTC, veMEZO, gauges, epochs) is powerful but heavy. Mezoir collapses that into one sentence: *what do you want?*
 
 ---
 
-## What "agent" means here, technically
+## System design
 
-The word "AI agent" is overused. Mezoir earns it by doing things a deterministic auto-compounder cannot:
+### Diagram (Excalidraw)
 
-1. **Interprets intent.** Translates "maximize BTC yield while staying balanced" into specific weights and constraints.
-2. **Reasons about tradeoffs.** When two gauges have similar yields but different risk profiles, it decides.
-3. **Adapts to changing conditions.** When BTC volatility spikes or a competing gauge raises incentives, it re-reasons.
-4. **Selects venue.** Chooses between matching market and secondary market each epoch based on expected return.
-5. **Explains itself.** Every decision comes with a natural-language rationale the user can read.
-
-The reasoning is the product. Without it, this is just another vault.
-
----
-
-## Architecture
+Open in [excalidraw.com](https://excalidraw.com) → **Open** → load:
 
 ```
-Frontend (Next.js, Vercel)
-      ↓
-Agent service (Python, LangGraph) — interprets intent, reasons, decides
-      ↓
-On-chain executor (Solidity contracts on Mezo Matsnet) — performs actions
-      ↑
-Goldsky subgraphs — historical gauge, voting, fee data
-Tenderly simulations — pre-execution validation of every action
+docs/system-design.excalidraw
 ```
 
-### Built with
-- **Mezo Passport** — wallet connection (BTC + EVM)
-- **Boar Network RPC** — dedicated Mezo endpoint
-- **Goldsky** — subgraph indexing for historical context
-- **Tenderly** — simulation before every on-chain action
-- **LangGraph + Claude** — reasoning state machine and natural-language explanation
+![System design overview](docs/system-design.svg)
+
+> **Tip:** Edit the `.excalidraw` file freely — it's the source of truth for architecture docs.
+
+### One-page flow (Mermaid)
+
+```mermaid
+flowchart TB
+  U[You] -->|intent + amount| W[Web · Vite/React]
+  U -->|connect| P[Mezo Passport]
+  P -.-> W
+  W -->|SSE /agent/execute_stream| A[Agent · FastAPI + LangGraph]
+  W -->|poll /agent/dashboard| A
+  A -->|GraphQL| G[Goldsky subgraph]
+  A -->|signed txs| C[Mezo testnet · veBTC / veMEZO / Gauge]
+  C -.->|index events| G
+  A -->|fallback RPC read| C
+```
+
+| Component | Role |
+|-----------|------|
+| **Web** | UI, wallet connect, live dashboard, SSE consumer |
+| **Agent** | Intent parse, strategy, LLM rationale, tx execution |
+| **Goldsky** | Fast dashboard aggregates (RPC fallback if unset) |
+| **Contracts** | Mock veBTC / veMEZO / gauge on Matsnet |
 
 ---
 
-## Demo
-
-A 60-second walkthrough showing Mezoir reasoning across both venues, executing on Matsnet, and explaining its decision in natural language.
-
-→ Live demo: *(deployed link)*
-→ Demo video: *(loom link)*
-→ Contracts on Matsnet: *(explorer link)*
-
----
-
-## Roadmap beyond the hackathon
-
-**v0.1 (this submission):** Single-user agent. Two venues. Three preset strategies + custom intent.
-
-**v0.2:** Cross-chain onboarding. User shows up with capital on Solana / Ethereum / Base; Mezoir bridges and deploys without the user touching Mezo's UI.
-
-**v0.3:** Strategy marketplace. Other builders deploy Mezoir-compatible strategies; users pick from a library. Strategy authors earn a fee.
-
-**v1.0:** Mezoir becomes the default execution layer for the Mezo ve-economy. Routes flow into Boar, Acre, Matchbox, and the secondary market; users never see the underlying complexity.
-
----
-
-## Repository structure
+## Repo map
 
 ```
 mezoir/
-├── contracts/        # Solidity — agent execution layer
-├── agent/            # Python — LangGraph reasoning service
-├── web/              # Next.js — frontend
-└── README.md
+├── web/                 # Vite + React frontend (Vercel)
+├── agent/               # FastAPI agent service (Render)
+├── contracts/           # Foundry — MockVeBTC, MockVeMEZO, MockGauge
+├── mezoir-subgraph/     # Goldsky subgraph (positions + votes)
+└── docs/
+    └── system-design.excalidraw
 ```
+
+| Path | Run with |
+|------|----------|
+| `web/` | `npm run dev` → `http://localhost:5173` |
+| `agent/` | `uvicorn app.main:app --port 8001` |
+| `contracts/` | `./tools/foundry/forge.exe build` |
+| `mezoir-subgraph/` | Goldsky CLI deploy |
 
 ---
 
-## Status
+## Quick start
 
-Built during the Mezo Hackathon 2026, April–May 2026. Currently on Mezo Matsnet. Mainnet deployment pending audit.
-
----
-
-## Acknowledgements
-
-Mezoir is built on primitives shipped by the Mezo team and community: Matchbox, the matching market, veBTC and veMEZO. It routes votes to Boar Finance's gauge as one of its strategies. Special thanks to Rod, Pyke, and the Mezo team for direct guidance during the build.
-
----
-
-## Getting Started (Day 1)
-
-### 1) Contracts (`contracts/`)
-
-Create env file:
+### 1 · Agent
 
 ```bash
-cp .env.example .env
-```
-
-Required envs in `contracts/.env`:
-
-- `MATSNET_RPC_URL`
-- `DEPLOYER_PRIVATE_KEY` (hex, no 0x prefix for `vm.envUint`)
-- `INITIAL_GREETING` (example: `hello mezoir`)
-
-Foundry setup (recommended, local install):
-
-```bash
-./tools/foundry/forge.exe build
-./tools/foundry/forge.exe script script/DeployHelloMezoir.s.sol:DeployHelloMezoir \
-  --rpc-url $MATSNET_RPC_URL \
-  --sender <YOUR_WALLET_ADDRESS> \
-  --broadcast
-```
-
-Optional Matsnet smoke transaction (self-transfer with cast):
-
-```bash
-./tools/foundry/cast.exe send <YOUR_WALLET_ADDRESS> --value 1wei \
-  --rpc-url $MATSNET_RPC_URL \
-  --private-key $DEPLOYER_PRIVATE_KEY
-```
-
-PowerShell variant:
-
-```powershell
-$env:MATSNET_RPC_URL="<your_boar_rpc_url>"
-$env:DEPLOYER_PRIVATE_KEY="<your_private_key_no_0x_prefix>"
-$env:INITIAL_GREETING="hello mezoir"
-./tools/foundry/forge.exe build
-./tools/foundry/forge.exe script script/DeployHelloMezoir.s.sol:DeployHelloMezoir --rpc-url $env:MATSNET_RPC_URL --sender <YOUR_WALLET_ADDRESS> --broadcast
-./tools/foundry/cast.exe send <YOUR_WALLET_ADDRESS> --value 1wei --rpc-url $env:MATSNET_RPC_URL --private-key $env:DEPLOYER_PRIVATE_KEY
-```
-
-### 2) Agent service (`agent/`)
-
-Create env file and install deps:
-
-```bash
-cp .env.example .env
+cd agent
+cp .env.example .env   # set RPC, contract addresses, operator key
 python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt
+.venv/Scripts/pip install -r requirements.txt   # Windows
+uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
-Run server:
-
 ```bash
-.venv/Scripts/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+curl http://127.0.0.1:8001/health
+curl http://127.0.0.1:8001/agent/dashboard
 ```
 
-Smoke test:
+**Key env vars** (`agent/.env.example`)
+
+| Variable | Purpose |
+|----------|---------|
+| `MEZO_TESTNET_RPC_URL` | Mezo RPC |
+| `VEBTC_PROXY_ADDRESS` / `VEMEZO_PROXY_ADDRESS` | Contract targets |
+| `AGENT_OPERATOR_PRIVATE_KEY` | Signs agent txs |
+| `GOLDSKY_SUBGRAPH_URL` | Optional — dashboard via subgraph |
+| `ANTHROPIC_API_KEY` | LLM intent + explanations |
+
+### 2 · Web
 
 ```bash
-curl http://127.0.0.1:8000/health
-curl -X POST http://127.0.0.1:8000/echo -H "Content-Type: application/json" -d "{\"text\":\"hello mezoir\"}"
-```
-
-### 3) Web app (`web/`)
-
-Create env file:
-
-```bash
+cd web
 cp .env.example .env
-```
-
-Set (in `web/.env`; see `web/.env.example`):
-
-- `VITE_APP_NAME=Mezoir`
-- `VITE_WALLETCONNECT_PROJECT_ID=<your_project_id>`
-- `VITE_AGENT_URL=http://localhost:8001` (or the URL where the agent listens)
-
-Install and run:
-
-```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` and click `Connect Wallet`.
+**Key env vars** (`web/.env.example`)
 
-### 4) Day 1 validation checklist
+| Variable | Purpose |
+|----------|---------|
+| `VITE_AGENT_URL` | Agent base URL (e.g. `http://localhost:8001`) |
+| `VITE_WALLETCONNECT_PROJECT_ID` | [Reown Cloud](https://cloud.reown.com) |
+| `VITE_VEBTC_PROXY_ADDRESS` | Shown in footer |
 
-- [x] Repo skeleton created and pushed
-- [x] Agent scaffold runs (`/health`, `/echo`)
-- [x] Web scaffold runs with Mezo Passport connect UI
-- [ ] Matsnet faucet funding (manual, wallet-specific)
-- [ ] Matsnet explorer balance verification (manual)
-- [ ] Live Matsnet smoke transaction hash recorded
-- [ ] Foundry deploy to Matsnet executed with local credentials
+Open **http://localhost:5173** → Connect wallet → Run agent.
+
+### 3 · Contracts (optional local deploy)
+
+```bash
+cd contracts
+cp .env.example .env
+./tools/foundry/forge.exe build
+./tools/foundry/forge.exe script script/DeployMockVeBTC.s.sol --rpc-url $MATSNET_RPC_URL --broadcast
 ```
+
+---
+
+## API surface
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/health` | Liveness |
+| `GET` | `/agent/dashboard` | Live positions (Goldsky → RPC fallback) |
+| `GET` | `/agent/execute_stream` | **SSE** — full intent run |
+| `GET` | `/agent/lock/{id}` | veBTC lock read |
+| `GET` | `/agent/lock_mezo/{id}` | veMEZO lock read |
+| `POST` | `/agent/lock_btc` | Lock BTC |
+| `POST` | `/agent/lock_mezo` | Lock MEZO |
+| `POST` | `/agent/set_allowed_manager` | Manager auth |
+
+**SSE event types:** `log` · `parsed_intent` · `chain_snapshot` · `decision_options` · `decision_made` · `action_start` · `action_result` · `vote_cast` · `explanation` · `done`
+
+---
+
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | Vite, React 18, Tailwind, Mezo Passport, RainbowKit |
+| Agent | Python 3.11, FastAPI, LangGraph, web3.py, Claude |
+| Indexing | Goldsky subgraph (`mezoir-subgraph/`) |
+| Chain | Mezo testnet, MockVeBTC / MockVeMEZO / MockGauge |
+| Deploy | Vercel (web) · Render (agent) |
+
+---
+
+## Roadmap
+
+| Version | Scope |
+|---------|--------|
+| **v0.1** *(now)* | Single operator, preset intents, SSE UX, testnet txs |
+| **v0.2** | Cross-chain onboarding, user-owned operator keys |
+| **v0.3** | Strategy marketplace — plug-in intents |
+| **v1.0** | Default execution layer across Mezo ve venues |
+
+---
+
+## Status & credits
+
+Built April–May 2026 on **Mezo Matsnet**. Testnet demo — not financial advice.
+
+Built on Mezo primitives: Matchbox, veBTC, veMEZO, gauges. Thanks to the Mezo team and community for hackathon support.

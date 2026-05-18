@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 620" fill="none">
+  <rect width="920" height="620" fill="#fafbff"/>
+  <text x="460" y="44" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="22" font-weight="600">Mezoir  system design</text>
+
+  <!-- You -->
+  <ellipse cx="130" cy="150" rx="70" ry="40" fill="#fff" stroke="#0a2540" stroke-width="2"/>
+  <text x="130" y="156" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="18">You</text>
+
+  <!-- Web -->
+  <rect x="300" y="110" width="220" height="100" rx="12" fill="#fff0f7" stroke="#f4007a" stroke-width="2"/>
+  <text x="410" y="148" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Web app</text>
+  <text x="410" y="172" text-anchor="middle" fill="#425466" font-family="system-ui,sans-serif" font-size="14">Vite + React · Vercel</text>
+
+  <!-- Passport -->
+  <rect x="620" y="120" width="180" height="80" rx="12" fill="#fafbff" stroke="#425466" stroke-width="2"/>
+  <text x="710" y="156" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="15" font-weight="600">Mezo Passport</text>
+  <text x="710" y="178" text-anchor="middle" fill="#425466" font-family="system-ui,sans-serif" font-size="13">BTC + EVM wallet</text>
+
+  <!-- Agent -->
+  <rect x="280" y="290" width="260" height="110" rx="12" fill="#fff0f7" stroke="#f4007a" stroke-width="2"/>
+  <text x="410" y="328" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Agent service</text>
+  <text x="410" y="352" text-anchor="middle" fill="#425466" font-family="system-ui,sans-serif" font-size="14">FastAPI + LangGraph · Render</text>
+
+  <!-- Goldsky -->
+  <rect x="40" y="300" width="200" height="90" rx="12" fill="#e8f4ff" stroke="#425466" stroke-width="2"/>
+  <text x="140" y="338" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="15" font-weight="600">Goldsky subgraph</text>
+  <text x="140" y="360" text-anchor="middle" fill="#425466" font-family="system-ui,sans-serif" font-size="13">positions + votes</text>
+
+  <!-- Chain -->
+  <rect x="240" y="470" width="340" height="120" rx="12" fill="#fafbff" stroke="#0a2540" stroke-width="2"/>
+  <text x="410" y="508" text-anchor="middle" fill="#0a2540" font-family="system-ui,sans-serif" font-size="16" font-weight="600">Mezo testnet (Matsnet)</text>
+  <text x="410" y="532" text-anchor="middle" fill="#425466" font-family="system-ui,sans-serif" font-size="14">veBTC · veMEZO · MockGauge</text>
+  <text x="410" y="554" text-anchor="middle" fill="#697386" font-family="system-ui,sans-serif" font-size="13">locks · manager auth · gauge votes</text>
+
+  <!-- Legend -->
+  <rect x="640" y="290" width="220" height="200" rx="12" fill="#fff" stroke="#e3e8ee" stroke-width="1"/>
+  <text x="660" y="320" fill="#0a2540" font-family="system-ui,sans-serif" font-size="14" font-weight="600">Flow</text>
+  <text x="660" y="348" fill="#425466" font-family="system-ui,sans-serif" font-size="13">1. Connect wallet</text>
+  <text x="660" y="370" fill="#425466" font-family="system-ui,sans-serif" font-size="13">2. Pick intent + amount</text>
+  <text x="660" y="392" fill="#425466" font-family="system-ui,sans-serif" font-size="13">3. Agent streams plan (SSE)</text>
+  <text x="660" y="414" fill="#425466" font-family="system-ui,sans-serif" font-size="13">4. Txs land on-chain</text>
+  <text x="660" y="448" fill="#697386" font-family="system-ui,sans-serif" font-size="12">Dashboard polls /agent/dashboard</text>
+
+  <!-- Arrows -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#0a2540"/>
+    </marker>
+    <marker id="arrow-pink" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#f4007a"/>
+    </marker>
+  </defs>
+
+  <line x1="200" y1="150" x2="300" y2="150" stroke="#0a2540" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="250" y="140" text-anchor="middle" fill="#697386" font-size="12">intent</text>
+
+  <line x1="620" y1="150" x2="520" y2="150" stroke="#425466" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="570" y="140" text-anchor="middle" fill="#697386" font-size="12">connect</text>
+
+  <line x1="410" y1="210" x2="410" y2="290" stroke="#f4007a" stroke-width="2" marker-end="url(#arrow-pink)"/>
+  <text x="455" y="255" fill="#f4007a" font-size="12">SSE + REST</text>
+
+  <line x1="240" y1="345" x2="280" y2="345" stroke="#425466" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+  <text x="260" y="335" text-anchor="middle" fill="#697386" font-size="12">query</text>
+
+  <line x1="410" y1="400" x2="410" y2="470" stroke="#0a2540" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="455" y="440" fill="#697386" font-size="12">signed txs</text>
+
+  <path d="M260 520 C180 480 140 420 140 345" stroke="#425466" stroke-width="2" stroke-dasharray="4 4" fill="none" marker-end="url(#arrow)"/>
+  <text x="170" y="430" fill="#697386" font-size="12">index</text>
+</svg>
