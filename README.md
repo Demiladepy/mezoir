@@ -59,7 +59,11 @@ Open in [excalidraw.com](https://excalidraw.com) → **Open** → load:
 docs/system-design.excalidraw
 ```
 
-![System design overview](docs/system-design.svg)
+**Preview** (PNG — GitHub does not reliably embed SVG images in README):
+
+![System design overview](docs/system-design.png)
+
+[Open editable SVG](docs/system-design.svg) · [Open Excalidraw source](docs/system-design.excalidraw)
 
 > **Tip:** Edit the `.excalidraw` file freely — it's the source of truth for architecture docs.
 
@@ -96,7 +100,9 @@ mezoir/
 ├── contracts/           # Foundry — MockVeBTC, MockVeMEZO, MockGauge
 ├── mezoir-subgraph/     # Goldsky subgraph (positions + votes)
 └── docs/
-    └── system-design.excalidraw
+    ├── system-design.excalidraw
+    ├── system-design.svg
+    └── system-design.png
 ```
 
 | Path | Run with |
