@@ -1,5 +1,4 @@
-/** Mezoir brand magenta from official wordmark */
-export const MEZOIR_MAGENTA = "#F4007A";
+export const MEZO_RASPBERRY = "#e91e63";
 
 const sizeClass = {
   sm: "h-6",
@@ -7,34 +6,64 @@ const sizeClass = {
   lg: "h-12",
 } as const;
 
-export function Logo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+export function Logo({
+  size = "md",
+  theme = "light",
+}: {
+  size?: "sm" | "md" | "lg";
+  theme?: "light" | "dark";
+}) {
+  const textFill = theme === "dark" ? "#ffffff" : "#0a0a0a";
+  const lockStroke = theme === "dark" ? "#ffffff" : MEZO_RASPBERRY;
+
   return (
     <svg
-      className={`${sizeClass[size]} w-auto`}
-      viewBox="0 0 168 40"
+      className={`${sizeClass[size]} w-auto transition-transform duration-300 group-hover:animate-[logo-wiggle_0.5s_ease-in-out]`}
+      viewBox="0 0 132 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label="Mezoir"
     >
-      {/* Wavy mark — continuous ribbon with two rounded peaks */}
+      {/* Wave-loop M + subtle lock shackle */}
       <path
-        d="M3.5 29.5C3.5 29.5 3.5 11 13 11C18.5 11 19 21.5 22.5 21.5C26 21.5 26.5 9.5 36 9.5C45 9.5 48.5 11 48.5 29.5"
-        stroke={MEZOIR_MAGENTA}
-        strokeWidth="4.75"
+        d="M4 22V10c0-2.2 1.8-4 4-4 1.4 0 2.6.7 3.3 1.8M11 6.5c.7-1.1 1.9-1.8 3.3-1.8 2.2 0 4 1.8 4 4v12"
+        stroke={MEZO_RASPBERRY}
+        strokeWidth="2.25"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+      <path
+        d="M11 6.5c.7-1.1 1.9-1.8 3.3-1.8 2.2 0 4 1.8 4 4v12"
+        stroke={MEZO_RASPBERRY}
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.45"
+        transform="translate(6 0)"
+      />
+      <rect
+        x="7.5"
+        y="14"
+        width="5"
+        height="4.5"
+        rx="1"
+        stroke={lockStroke}
+        strokeWidth="1.25"
+        fill="none"
+        opacity="0.85"
+      />
+      <circle cx="10" cy="14" r="1.1" fill={MEZO_RASPBERRY} />
       <text
-        x="58"
-        y="29"
-        fill={MEZOIR_MAGENTA}
-        fontFamily="'Varela Round', system-ui, sans-serif"
-        fontSize="22.5"
-        fontWeight="700"
+        x="34"
+        y="23"
+        fill={textFill}
+        fontFamily="inherit"
+        fontSize="19"
+        fontWeight="600"
         letterSpacing="-0.02em"
       >
-        Mezoir
+        mezoir
       </text>
     </svg>
   );

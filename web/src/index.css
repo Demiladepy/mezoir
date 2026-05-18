@@ -152,76 +152,21 @@
     opacity: 0;
   }
 
-  .mezoir-enter-delay-1 {
-    animation-delay: 0.12s;
+  .mezo-card {
+    @apply rounded-3xl border border-[#e5e5e5] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)];
   }
-  .mezoir-enter-delay-2 {
-    animation-delay: 0.22s;
-  }
-  .mezoir-enter-delay-3 {
-    animation-delay: 0.34s;
-  }
-  .mezoir-enter-delay-4 {
-    animation-delay: 0.46s;
-  }
-  .mezoir-enter-delay-5 {
-    animation-delay: 0.58s;
-  }
+}
 
-  .mezoir-page-bg {
-    background-color: var(--color-mezoir-surface);
-    background-image:
-      radial-gradient(
-        ellipse 90% 55% at 50% -15%,
-        rgba(244, 0, 122, 0.09),
-        transparent 55%
-      ),
-      radial-gradient(
-        ellipse 50% 40% at 100% 20%,
-        rgba(59, 130, 246, 0.06),
-        transparent 50%
-      ),
-      radial-gradient(
-        ellipse 40% 35% at 0% 80%,
-        rgba(244, 0, 122, 0.04),
-        transparent 45%
-      );
+@keyframes logo-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
   }
-
-  .mezoir-card {
-    @apply rounded-2xl border border-[#e3e8ee]/80 bg-white/95 shadow-[0_1px_2px_rgba(10,37,64,0.04),0_12px_40px_rgba(10,37,64,0.06)] backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_2px_4px_rgba(10,37,64,0.05),0_16px_48px_rgba(10,37,64,0.08)];
+  25% {
+    transform: rotate(-2deg);
   }
-
-  .mezoir-label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-[#697386];
-  }
-
-  .mezoir-heading {
-    @apply font-semibold tracking-tight text-[#0a2540];
-  }
-
-  .mezoir-gradient-text {
-    background: linear-gradient(
-      120deg,
-      #0a2540 0%,
-      #425466 42%,
-      #f4007a 100%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .mezoir-glow-orb {
-    animation: mezoir-glow-drift 14s ease-in-out infinite;
-  }
-
-  .mezoir-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f4007a] to-[#d9006a] px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_14px_rgba(244,0,122,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(244,0,122,0.4)] active:translate-y-0 disabled:pointer-events-none disabled:opacity-60;
-  }
-
-  .mezoir-field {
-    @apply w-full rounded-xl border border-[#e3e8ee] bg-white px-3.5 py-3 text-sm text-[#0a2540] shadow-sm transition-all duration-200 focus:border-[#f4007a] focus:outline-none focus:ring-[3px] focus:ring-[#f4007a]/15;
+  75% {
+    transform: rotate(2deg);
   }
 }
 
@@ -230,8 +175,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-[#fafbff] font-sans text-[#0a2540] antialiased;
-    font-feature-settings: "kern" 1, "liga" 1;
+    @apply bg-[#F9F6F0] font-sans text-black antialiased;
   }
   html {
     @apply font-sans scroll-smooth;

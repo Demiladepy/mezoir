@@ -8,7 +8,8 @@ const PRESET_INTENTS = [
   "Park me defensively",
 ] as const;
 
-const fieldClass = "mezoir-field";
+const fieldClass =
+  "mezo-field w-full rounded-2xl border border-[#e5e5e5] bg-[#fafafa] px-4 py-3 text-base text-black transition-all duration-200 focus:border-[#e91e63] focus:outline-none focus:ring-2 focus:ring-[#e91e63]/25";
 
 interface ParsedIntent {
   raw: string;
@@ -419,13 +420,19 @@ export function IntentPicker() {
     status === "streaming" || status === "done" || status === "error";
 
   return (
-    <section className="mezoir-card overflow-hidden">
-      <div className="border-b border-[#e3e8ee]/80 bg-gradient-to-b from-white to-[#fafbff]/50 p-7 lg:p-9">
-        <div className="grid gap-4 sm:grid-cols-2">
+    <section className="overflow-hidden rounded-3xl border border-[#e5e5e5] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="border-b border-[#e5e5e5] p-8 lg:p-10">
+        <h2 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-black">
+          <span className="text-[#e91e63]" aria-hidden>
+            ✓
+          </span>
+          Tell the agent what you want
+        </h2>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             <label
               htmlFor="intent-select"
-              className="mezoir-label"
+              className="text-xs font-medium uppercase tracking-[0.1em] text-[#737373]"
             >
               Intent
             </label>
@@ -445,7 +452,7 @@ export function IntentPicker() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="amount-btc"
-              className="mezoir-label"
+              className="text-xs font-medium uppercase tracking-[0.1em] text-[#737373]"
             >
               Amount (BTC)
             </label>
@@ -464,7 +471,7 @@ export function IntentPicker() {
           type="button"
           onClick={handleSubmit}
           disabled={status === "streaming"}
-          className="mezoir-btn-primary mt-6 w-full sm:w-auto"
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-black px-8 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-[#171717] hover:ring-2 hover:ring-[#e91e63]/30 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {status === "streaming" ? (
             <>
@@ -480,27 +487,29 @@ export function IntentPicker() {
       {showStream && (
         <div className="flex flex-col">
           {initializing && status === "streaming" && (
-            <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="text-sm text-[#425466]">Initializing agent…</p>
+            <FadeIn className="border-b border-[#e5e5e5] p-8 lg:p-10">
+              <div className="rounded-2xl bg-[#fafafa] p-6 text-sm text-[#525252]">
+                Initializing agent…
+              </div>
             </FadeIn>
           )}
 
           {(logs.length > 0 || (!initializing && status === "streaming")) && (
-            <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="mezoir-label">
+            <FadeIn className="border-b border-[#e5e5e5] pb-8 pt-8 lg:pb-10 lg:pt-10">
+              <p className="px-8 text-xs font-medium uppercase tracking-[0.1em] text-[#737373] lg:px-10">
                 Activity
               </p>
               <div
                 ref={logContainerRef}
                 aria-live="polite"
-                className="mt-3 max-h-64 overflow-y-auto rounded-lg bg-[#fafbff] p-4"
+                className="mx-8 mt-4 max-h-64 overflow-y-auto rounded-2xl bg-[#fafafa] p-4 lg:mx-10"
               >
                 {logs.length === 0 ? (
-                  <p className="font-mono text-sm text-[#697386]">
+                  <p className="font-mono text-xs text-[#737373]">
                     Waiting for first events…
                   </p>
                 ) : (
-                  <div className="space-y-2 font-mono text-sm">
+                  <div className="space-y-2">
                     {logs.map((line, i) => {
                       const isLast =
                         i === logs.length - 1 && status === "streaming";
@@ -509,13 +518,13 @@ export function IntentPicker() {
                         : "--:--:--";
                       return (
                         <div key={`${line.timestamp}-${i}`} className="flex gap-3">
-                          <span className="w-16 shrink-0 text-[#697386]">
+                          <span className="w-16 shrink-0 font-mono text-xs text-[#737373]">
                             {time}
                           </span>
-                          <span className="flex min-w-0 flex-1 gap-2 text-[#425466]">
+                          <span className="flex min-w-0 flex-1 gap-2 text-sm text-[#525252]">
                             {isLast && (
                               <span
-                                className="mt-2 h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#f4007a]"
+                                className="mt-2 h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#e91e63]"
                                 aria-hidden
                               />
                             )}
@@ -531,27 +540,33 @@ export function IntentPicker() {
           )}
 
           {chainSnapshot && (
-            <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="mezoir-label">
-                Chain state
+            <FadeIn className="border-b border-[#e5e5e5] p-8 lg:p-10">
+              <p className="text-xs font-medium uppercase tracking-[0.1em] text-[#737373]">
+                On-chain context
               </p>
-              <div className="mt-4 grid gap-6 sm:grid-cols-2">
-                <div className="border-l-2 border-[#f4007a] pl-4">
-                  <p className="text-xs text-[#697386]">Block</p>
-                  <p className="mt-1 font-mono text-sm text-[#0a2540]">
+              <div className="mt-5 grid gap-8 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase text-[#737373]">Block</p>
+                  <p className="mt-1 font-mono font-medium text-black">
                     {chainSnapshot.block_number ?? "unknown"}
                   </p>
-                </div>
-                <div className="border-l-2 border-[#f4007a] pl-4">
-                  <p className="text-xs text-[#697386]">Operator</p>
-                  <p className="mt-1 font-mono text-sm text-[#0a2540]">
+                  <p className="mt-4 text-xs uppercase text-[#737373]">
+                    Operator
+                  </p>
+                  <p className="mt-1 font-mono font-medium text-black">
                     {shortAddress(chainSnapshot.operator_address)}
                   </p>
-                  <p className="mt-2 text-xs text-[#697386]">Positions</p>
-                  <p className="mt-1 text-sm text-[#425466]">
-                    {chainSnapshot.operator_position_count ?? 0} ·{" "}
-                    {(chainSnapshot.operator_total_locked_btc ?? 0).toFixed(6)}{" "}
+                </div>
+                <div>
+                  <p className="text-xs uppercase text-[#737373]">Positions</p>
+                  <p className="mt-1 font-medium text-black">
+                    {chainSnapshot.operator_position_count ?? 0}
+                  </p>
+                  <p className="mt-4 text-xs uppercase text-[#737373]">
                     BTC locked
+                  </p>
+                  <p className="mt-1 font-medium text-black">
+                    {(chainSnapshot.operator_total_locked_btc ?? 0).toFixed(6)}
                   </p>
                 </div>
               </div>
@@ -559,87 +574,87 @@ export function IntentPicker() {
           )}
 
           {parsedIntent && (
-            <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="mezoir-label">
+            <FadeIn className="border-b border-[#e5e5e5] p-8 lg:p-10">
+              <p className="text-xs font-medium uppercase tracking-[0.1em] text-[#737373]">
                 Parsed intent
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-[#f4007a]/20 bg-[#f4007a]/10 px-3 py-1 text-sm font-medium text-[#f4007a]">
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full border border-[#e91e63]/20 bg-[#e91e63]/[0.08] px-4 py-1.5 text-sm font-medium text-[#e91e63]">
                   {parsedIntent.profile}
                 </span>
-                <span className="rounded-full border border-[#f4007a]/20 bg-[#f4007a]/10 px-3 py-1 text-sm font-medium text-[#f4007a]">
+                <span className="rounded-full border border-[#e91e63]/20 bg-[#e91e63]/[0.08] px-4 py-1.5 text-sm font-medium text-[#e91e63]">
                   {parsedIntent.priority}
                 </span>
               </div>
-              <p className="mt-3 text-sm italic text-[#697386]">
+              <p className="mt-4 text-sm italic text-[#525252]">
                 {parsedIntent.raw}
               </p>
             </FadeIn>
           )}
 
           {decisions.length > 0 && (
-            <div className="border-b border-[#e3e8ee]">
+            <div className="border-b border-[#e5e5e5]">
               {decisions.map((decision) => {
                 const decided = decision.chosen_id !== null;
                 const stepLabel = decision.step.replace(/_/g, " ");
                 return (
                   <FadeIn
                     key={decision.step}
-                    className="border-b border-[#e3e8ee] p-6 last:border-b-0 lg:p-8"
+                    className="border-b border-[#e5e5e5] p-8 last:border-b-0 lg:p-10"
                   >
-                    <h3 className="text-lg font-semibold text-[#0a2540]">
+                    <h3 className="text-2xl font-semibold tracking-tight text-black">
                       Decision: {stepLabel}
                     </h3>
                     {!decided && (
-                      <p className="mt-1 mezoir-label">
+                      <p className="mb-6 mt-2 text-xs uppercase tracking-[0.1em] text-[#e91e63]">
                         Agent is comparing options
                       </p>
                     )}
-                    <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                       {decision.options.map((opt) => {
                         const chosen = decision.chosen_id === opt.id;
                         return (
                           <div
                             key={opt.id}
-                            className={`relative rounded-xl border-2 p-5 transition-all duration-300 ${
+                            className={`relative rounded-2xl border-2 p-6 transition-all duration-300 ${
                               chosen
-                                ? "scale-[1.01] border-[#f4007a] shadow-[0_4px_16px_rgba(244,0,122,0.2)]"
+                                ? "scale-[1.02] border-[#e91e63] shadow-[0_8px_24px_rgba(233,30,99,0.18)]"
                                 : decided
-                                  ? "border-[#e3e8ee] opacity-50"
-                                  : "border-[#e3e8ee]"
+                                  ? "border-[#e5e5e5] opacity-50"
+                                  : "border-[#e5e5e5]"
                             }`}
                           >
                             {chosen && (
-                              <span className="absolute right-3 top-3 rounded-full bg-[#f4007a] px-2 py-1 text-xs font-medium text-white">
+                              <span className="absolute right-4 top-4 rounded-full bg-[#e91e63] px-3 py-1 text-xs font-medium text-white">
                                 Selected
                               </span>
                             )}
-                            <p className="pr-20 text-sm font-medium text-[#0a2540]">
+                            <p className="pr-24 text-base font-medium text-black">
                               {opt.label}
                             </p>
-                            <ul className="mt-3 space-y-1">
+                            <ul className="mt-4 space-y-1.5">
                               {opt.pros.map((p, i) => (
                                 <li
                                   key={`${opt.id}-pro-${i}`}
-                                  className="flex gap-2 text-sm text-[#425466]"
+                                  className="flex gap-2 text-sm text-[#525252]"
                                 >
-                                  <span className="text-[#f4007a]">•</span>
+                                  <span className="text-[#e91e63]">•</span>
                                   <span>{p}</span>
                                 </li>
                               ))}
                             </ul>
-                            <ul className="mt-2 space-y-1">
+                            <ul className="mt-3 space-y-1.5">
                               {opt.cons.map((c, i) => (
                                 <li
                                   key={`${opt.id}-con-${i}`}
-                                  className="flex gap-2 text-sm text-[#697386]"
+                                  className="flex gap-2 text-sm text-[#737373]"
                                 >
                                   <span>•</span>
                                   <span>{c}</span>
                                 </li>
                               ))}
                             </ul>
-                            <span className="absolute bottom-4 right-4 rounded bg-[#fafbff] px-2 py-1 font-mono text-xs text-[#0a2540]">
+                            <span className="absolute bottom-5 right-5 rounded-full bg-[#fafafa] px-3 py-1 font-mono text-xs text-black">
                               {opt.score.toFixed(2)}
                             </span>
                           </div>
@@ -647,7 +662,7 @@ export function IntentPicker() {
                       })}
                     </div>
                     {decision.rationale && (
-                      <p className="mt-4 rounded-lg bg-[#fafbff] p-4 text-sm italic text-[#697386]">
+                      <p className="mt-6 rounded-2xl bg-[#fafafa] p-5 text-sm italic text-[#525252]">
                         Why: {decision.rationale}
                       </p>
                     )}
@@ -658,70 +673,71 @@ export function IntentPicker() {
           )}
 
           {actions.length > 0 && (
-            <div className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="mb-4 mezoir-label">
+            <div className="border-b border-[#e5e5e5] p-8 lg:p-10">
+              <p className="mb-6 text-xs font-medium uppercase tracking-[0.1em] text-[#737373]">
                 Actions
               </p>
               <div className="flex flex-col gap-4">
                 {actions.map((a) => (
                   <FadeIn
                     key={`${a.action}-${a.started}-${a.finished}-${a.tx_hash ?? a.error ?? ""}`}
-                    className="rounded-xl border border-[#e3e8ee] p-5 transition-shadow duration-200 hover:shadow-md"
+                    className="relative rounded-2xl border border-[#e5e5e5] bg-white p-6 transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="absolute right-5 top-5">
                       {a.started && !a.finished ? (
                         <span
-                          className="mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#f4007a]"
+                          className="block h-2 w-2 animate-pulse rounded-full bg-[#e91e63]"
                           aria-label="Executing"
                         />
                       ) : a.success === true ? (
                         <span
-                          className="text-base text-emerald-600"
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-sm text-emerald-600"
                           aria-hidden
                         >
                           ✓
                         </span>
                       ) : a.finished ? (
-                        <span className="text-base text-red-500" aria-hidden>
+                        <span
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-red-50 text-sm text-red-600"
+                          aria-hidden
+                        >
                           ✗
                         </span>
                       ) : null}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-[#0a2540]">
-                          {actionLabel(a.action)}
-                        </p>
-                        <p className="mt-1 text-sm text-[#425466]">
-                          {a.rationale}
-                        </p>
-                        {a.tx_hash && a.explorer_url && (
-                          <a
-                            href={a.explorer_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-2 inline-flex items-center gap-1 font-mono text-sm text-[#0a2540] hover:text-[#f4007a]"
-                          >
-                            {shortHash(a.tx_hash)}
-                            <span className="text-[#f4007a]" aria-hidden>
-                              ↗
-                            </span>
-                          </a>
-                        )}
-                        {a.error && (
-                          <p className="mt-2 text-sm text-red-600">
-                            {friendlyActionError(a.action, a.error)}
-                          </p>
-                        )}
-                        {a.action === "vote_gauge" &&
-                          a.vote_token_id != null &&
-                          a.vote_weight != null && (
-                            <p className="mt-2 text-sm text-[#425466]">
-                              veMEZO #{a.vote_token_id} on{" "}
-                              {a.vote_gauge_name ?? "MUSD/BTC LP"} · weight{" "}
-                              {(a.vote_weight / 1e18).toFixed(3)}
-                            </p>
-                          )}
-                      </div>
                     </div>
+                    <p className="pr-10 text-lg font-semibold text-black">
+                      {actionLabel(a.action)}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-[#525252]">
+                      {a.rationale}
+                    </p>
+                    {a.tx_hash && a.explorer_url && (
+                      <a
+                        href={a.explorer_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 inline-flex items-center gap-1 font-mono text-xs text-[#737373] hover:text-[#e91e63]"
+                      >
+                        {shortHash(a.tx_hash)}
+                        <span className="text-[#e91e63]" aria-hidden>
+                          ↗
+                        </span>
+                      </a>
+                    )}
+                    {a.error && (
+                      <p className="mt-3 text-sm text-red-600">
+                        {friendlyActionError(a.action, a.error)}
+                      </p>
+                    )}
+                    {a.action === "vote_gauge" &&
+                      a.vote_token_id != null &&
+                      a.vote_weight != null && (
+                        <p className="mt-2 text-sm text-[#525252]">
+                          veMEZO #{a.vote_token_id} on{" "}
+                          {a.vote_gauge_name ?? "MUSD/BTC LP"} · weight{" "}
+                          {(a.vote_weight / 1e18).toFixed(3)}
+                        </p>
+                      )}
                   </FadeIn>
                 ))}
               </div>
@@ -729,11 +745,11 @@ export function IntentPicker() {
           )}
 
           {explanation && (
-            <FadeIn className="p-6 lg:p-8">
-              <p className="mezoir-label">
-                Agent&apos;s explanation
+            <FadeIn className="p-8 lg:p-10">
+              <p className="text-xs font-medium uppercase tracking-[0.1em] text-[#737373]">
+                Agent&apos;s summary
               </p>
-              <p className="mt-3 rounded-lg bg-[#fafbff] p-6 text-base leading-relaxed text-[#425466]">
+              <p className="mt-4 rounded-2xl bg-[#fafafa] p-6 text-base leading-relaxed text-[#525252]">
                 {explanation}
               </p>
             </FadeIn>

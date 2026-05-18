@@ -1,172 +1,102 @@
-import { useState, type ReactNode } from "react";
-
-import { Logo, MEZOIR_MAGENTA } from "@/components/logo";
-import { Reveal } from "@/components/motion";
+import { Logo } from "@/components/logo";
 
 const EXPLORER = "https://explorer.test.mezo.org";
-const MEZO = "https://mezo.org";
+const MEZO_DOCS = "https://mezo.org";
+const GITHUB_URL = import.meta.env.VITE_GITHUB_URL?.trim() || "https://github.com";
 
-const VEBTC_ADDRESS =
-  import.meta.env.VITE_VEBTC_PROXY_ADDRESS ??
-  "0x1C77C4ABD2295c88A8C99647B25345879624ac57";
-
-const GITHUB_URL = import.meta.env.VITE_GITHUB_URL?.trim() || "";
-
-function shortenAddr(addr: string) {
-  if (!addr || addr.length < 12) return addr;
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
-function FooterLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) {
-  const external = href.startsWith("http");
+function SocialX() {
   return (
-    <a
-      href={href}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noopener noreferrer" : undefined}
-      className="group inline-flex items-center gap-1.5 text-sm text-[#425466] transition-all duration-200 hover:translate-x-0.5 hover:text-[#0a2540]"
-    >
-      <span className="border-b border-transparent transition-colors group-hover:border-[#f4007a]">
-        {children}
-      </span>
-      {external && (
-        <span
-          className="text-[#697386] transition-colors group-hover:text-[#f4007a]"
-          aria-hidden
-        >
-          ↗
-        </span>
-      )}
-    </a>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg
-      className="h-3.5 w-3.5"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden
-    >
-      <rect x="5.5" y="5.5" width="8" height="8" rx="1.25" />
-      <path d="M10.5 5.5V3.75A1.25 1.25 0 0 0 9.25 2.5H3.75A1.25 1.25 0 0 0 2.5 3.75v5.5A1.25 1.25 0 0 0 3.75 10.5H5.5" />
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
 }
 
-export function Footer() {
-  const [copied, setCopied] = useState(false);
-
-  async function copyAddress() {
-    try {
-      await navigator.clipboard.writeText(VEBTC_ADDRESS);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
-  }
-
+function SocialDiscord() {
   return (
-    <footer className="mt-4">
-      <Reveal delay={0}>
-        <div
-          className="mb-10 h-px w-full bg-gradient-to-r from-transparent via-[#f4007a]/30 to-transparent"
-          aria-hidden
-        />
-      </Reveal>
-
-      <Reveal delay={80}>
-        <div className="mezoir-card overflow-hidden">
-          <div
-            className="h-1 w-full bg-gradient-to-r from-[#f4007a]/50 via-[#3b82f6]/30 to-transparent"
-            aria-hidden
-          />
-
-          <div className="grid gap-10 p-8 lg:grid-cols-12 lg:gap-12 lg:p-10">
-            <div className="lg:col-span-5">
-              <Logo size="sm" />
-              <p className="mt-5 max-w-sm text-sm leading-relaxed text-[#425466]">
-                State your intent once. Mezoir reads ve positions, compares lock
-                paths, and executes on Mezo testnet—with a plain-English audit
-                trail you can verify on-chain.
-              </p>
-              <div className="mt-6 inline-flex items-center gap-2.5 rounded-full border border-[#e3e8ee] bg-[#fafbff] px-4 py-2 shadow-sm">
-                <span
-                  className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.55)]"
-                  aria-hidden
-                />
-                <span className="text-xs font-medium text-[#425466]">
-                  Mezo testnet · real transactions
-                </span>
-              </div>
-            </div>
-
-            <div className="lg:col-span-3">
-              <p className="mezoir-label">Resources</p>
-              <nav className="mt-5 flex flex-col gap-3">
-                <FooterLink href={EXPLORER}>Block explorer</FooterLink>
-                <FooterLink href={MEZO}>Mezo</FooterLink>
-                {GITHUB_URL ? (
-                  <FooterLink href={GITHUB_URL}>Source code</FooterLink>
-                ) : null}
-              </nav>
-            </div>
-
-            <div className="lg:col-span-4">
-              <p className="mezoir-label">On-chain</p>
-              <div className="mt-5 rounded-xl border border-[#e3e8ee] bg-gradient-to-br from-[#fafbff] to-white p-5 shadow-inner">
-                <p className="text-xs font-medium text-[#697386]">
-                  VeBTC contract (testnet)
-                </p>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <code className="truncate font-mono text-xs text-[#0a2540]">
-                    {shortenAddr(VEBTC_ADDRESS)}
-                  </code>
-                  <button
-                    type="button"
-                    onClick={copyAddress}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#e3e8ee] bg-white px-3 py-2 text-xs font-semibold text-[#425466] shadow-sm transition-all duration-200 hover:border-[#f4007a]/35 hover:text-[#f4007a] hover:shadow-md"
-                    aria-label={
-                      copied ? "Address copied" : "Copy contract address"
-                    }
-                  >
-                    <CopyIcon />
-                    {copied ? "Copied" : "Copy"}
-                  </button>
-                </div>
-                <a
-                  href={`${EXPLORER}/address/${VEBTC_ADDRESS}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-1 text-xs font-semibold transition-colors"
-                  style={{ color: MEZOIR_MAGENTA }}
-                >
-                  View on explorer
-                  <span aria-hidden>↗</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 border-t border-[#e3e8ee] bg-[#fafbff]/80 px-8 py-5 text-xs text-[#697386] sm:flex-row sm:items-center sm:justify-between lg:px-10">
-            <p className="font-medium text-[#425466]">
-              © 2026 Mezoir · Mezo Hackathon — MEZO Track
-            </p>
-            <p>Testnet demo · not financial advice</p>
-          </div>
-        </div>
-      </Reveal>
-    </footer>
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+    </svg>
   );
 }
 
+function FooterLink({ href, children }: { href: string; children: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm text-[#a3a3a3] transition-colors duration-200 hover:text-white"
+    >
+      {children}
+    </a>
+  );
+}
+
+export function Footer() {
+  return (
+    <footer className="mt-16 bg-[#0a0a0a] text-white">
+      <div className="mx-auto max-w-7xl px-6 py-12 lg:px-12">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-8">
+          <div>
+            <Logo theme="dark" size="md" />
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-[#a3a3a3]">
+              Mezoir is an intent-based agent for Mezo&apos;s ve-economy. Built
+              for the 2026 Mezo Bitcoin Hackathon.
+            </p>
+            <div className="mt-6 flex items-center gap-4">
+              <a
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 transition-opacity hover:opacity-100"
+                aria-label="X"
+              >
+                <SocialX />
+              </a>
+              <a
+                href="https://discord.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 transition-opacity hover:opacity-100"
+                aria-label="Discord"
+              >
+                <SocialDiscord />
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-white">Resources</p>
+            <nav className="mt-4 flex flex-col gap-3">
+              <FooterLink href={GITHUB_URL}>GitHub repo</FooterLink>
+              <FooterLink href={MEZO_DOCS}>Mezo docs</FooterLink>
+              <FooterLink href={EXPLORER}>Mezo explorer</FooterLink>
+            </nav>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-white">Sponsors used</p>
+            <ul className="mt-4 space-y-2 text-sm text-[#a3a3a3]">
+              <li>Validation Cloud — RPC</li>
+              <li>Goldsky — subgraph indexing</li>
+              <li>Mezo Earn — canonical contracts</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-[#737373]">© 2026 Mezoir</p>
+          <div className="flex gap-6 text-xs text-[#737373]">
+            <a href="#" className="transition-colors hover:text-white">
+              Privacy
+            </a>
+            <a href="#" className="transition-colors hover:text-white">
+              Terms
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

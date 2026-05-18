@@ -1,48 +1,45 @@
-import { Footer } from "@/components/footer";
 import { IntentPicker } from "@/components/intent-picker";
 import { LiveActivity } from "@/components/live-activity";
-import { AnimatedWords, Reveal } from "@/components/motion";
+import { MezoVideo } from "@/components/mezo-video";
+import { Reveal } from "@/components/motion";
 
 export function WalletHome() {
   return (
-    <div className="flex flex-col gap-12 lg:gap-16">
-      <section className="mx-auto max-w-3xl text-center">
-        <Reveal delay={100}>
-          <p className="mezoir-label mb-4">Intent → execution → explanation</p>
-        </Reveal>
-        <h1 className="text-3xl leading-tight lg:text-5xl lg:leading-[1.12]">
-          <AnimatedWords
-            text="Intent-based ve strategy"
-            className="mezoir-gradient-text font-semibold"
-          />
+    <div className="grid gap-10 lg:grid-cols-12 lg:gap-x-8 lg:gap-y-12">
+      <Reveal
+        delay={100}
+        className="flex flex-col justify-center lg:col-span-5 lg:col-start-1"
+      >
+        <p className="text-xs font-medium uppercase tracking-[0.1em] text-[#737373]">
+          Intent → execution → explanation
+        </p>
+        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-black lg:text-5xl xl:text-6xl">
+          Your ve strategy, one sentence.
         </h1>
-        <Reveal delay={280} className="mx-auto mt-5 max-w-2xl">
-          <p className="text-base leading-relaxed text-[#425466] lg:text-lg lg:leading-relaxed">
-            Tell Mezoir your goal — it reads chain state, compares lock paths,
-            and executes manager auth and gauge votes on Mezo testnet.
-          </p>
-        </Reveal>
-        <Reveal delay={380} className="mt-6 flex justify-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#e3e8ee] bg-white/80 px-4 py-2 text-xs font-medium text-[#425466] shadow-sm">
-            <span
-              className="h-2 w-2 animate-pulse rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-              aria-hidden
-            />
-            Mezo testnet · live agent
-          </span>
-        </Reveal>
-      </section>
+        <p className="mt-5 max-w-md text-base leading-relaxed text-[#525252]">
+          Tell Mezoir what you want. It reads chain state, compares lock paths,
+          and executes on Mezo testnet—with a plain-English audit trail.
+        </p>
+        <span className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-[#e5e5e5] bg-white px-4 py-2 text-xs font-medium text-[#525252]">
+          <span
+            className="h-2 w-2 rounded-full bg-emerald-500"
+            aria-hidden
+          />
+          Mezo testnet · live agent
+        </span>
+      </Reveal>
 
-      <Reveal delay={200}>
+      <Reveal delay={140} className="lg:col-span-7 lg:col-start-6">
+        <MezoVideo />
+      </Reveal>
+
+      <Reveal delay={180} className="lg:col-span-12">
         <IntentPicker />
       </Reveal>
-      <Reveal delay={260}>
+
+      <Reveal delay={220} className="lg:col-span-12">
         <LiveActivity />
-      </Reveal>
-      <Reveal delay={320}>
-        <Footer />
       </Reveal>
     </div>
   );
 }
-

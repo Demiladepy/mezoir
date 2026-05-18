@@ -6,50 +6,50 @@ import { Reveal } from "@/components/motion";
 
 export function Header() {
   const [mounted, setMounted] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-[#e3e8ee]/80 bg-white/75 shadow-[0_1px_0_rgba(10,37,64,0.04)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-5 lg:px-8 lg:py-6">
-        <Reveal className="flex min-w-0 items-center gap-5" delay={0}>
-          <a
-            href="/"
-            className="shrink-0 transition-transform duration-300 hover:scale-[1.02]"
-            aria-label="Mezoir home"
-          >
+    <header
+      className={`sticky top-0 z-50 bg-[#F9F6F0]/90 backdrop-blur-md transition-shadow duration-200 ${
+        scrolled ? "shadow-sm" : ""
+      }`}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-6 lg:px-12">
+        <Reveal className="flex min-w-0 items-center gap-4" delay={0}>
+          <a href="/" className="group shrink-0" aria-label="Mezoir home">
             <Logo size="md" />
           </a>
-          <div className="hidden min-w-0 sm:block">
-            <p className="mezoir-enter mezoir-enter-delay-2 text-sm font-medium text-[#0a2540]">
-              Agent for the ve-economy
-            </p>
-            <p className="mezoir-enter mezoir-enter-delay-3 mt-0.5 text-xs text-[#697386]">
-              Locks · votes · plain-English reasoning
-            </p>
-          </div>
+          <p className="hidden font-mono text-sm text-[#737373] lg:inline">
+            agent for the ve-economy
+          </p>
         </Reveal>
 
-        <Reveal className="shrink-0" delay={160}>
-          {mounted ? (
-            <ConnectButton label="Connect Wallet" />
-          ) : (
-            <button
-              type="button"
-              className="rounded-xl border border-[#e3e8ee] bg-white px-5 py-2.5 text-sm font-medium text-[#697386] shadow-sm"
-            >
-              Connect Wallet
-            </button>
-          )}
+        <Reveal className="shrink-0" delay={120}>
+          <div className="overflow-hidden rounded-full">
+            {mounted ? (
+              <ConnectButton label="Connect Wallet" />
+            ) : (
+              <button
+                type="button"
+                className="rounded-full bg-black px-6 py-3 text-sm font-medium text-white"
+              >
+                Connect Wallet
+              </button>
+            )}
+          </div>
         </Reveal>
       </div>
-      <div
-        className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#f4007a]/35 to-transparent"
-        aria-hidden
-      />
     </header>
   );
 }
-
