@@ -8,8 +8,7 @@ const PRESET_INTENTS = [
   "Park me defensively",
 ] as const;
 
-const fieldClass =
-  "w-full rounded-lg border border-[#e3e8ee] bg-[#fafbff] px-3 py-2.5 text-sm text-[#0a2540] shadow-sm transition-colors focus:border-[#f7931a] focus:outline-none focus:ring-2 focus:ring-[#f7931a]/20";
+const fieldClass = "mezoir-field";
 
 interface ParsedIntent {
   raw: string;
@@ -420,13 +419,13 @@ export function IntentPicker() {
     status === "streaming" || status === "done" || status === "error";
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#e3e8ee] bg-white shadow-sm">
-      <div className="border-b border-[#e3e8ee] p-6 lg:p-8">
+    <section className="mezoir-card overflow-hidden">
+      <div className="border-b border-[#e3e8ee]/80 bg-gradient-to-b from-white to-[#fafbff]/50 p-7 lg:p-9">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             <label
               htmlFor="intent-select"
-              className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]"
+              className="mezoir-label"
             >
               Intent
             </label>
@@ -446,7 +445,7 @@ export function IntentPicker() {
           <div className="flex flex-col gap-2">
             <label
               htmlFor="amount-btc"
-              className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]"
+              className="mezoir-label"
             >
               Amount (BTC)
             </label>
@@ -465,7 +464,7 @@ export function IntentPicker() {
           type="button"
           onClick={handleSubmit}
           disabled={status === "streaming"}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#f7931a] px-6 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[#e08813] hover:shadow-md disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
+          className="mezoir-btn-primary mt-6 w-full sm:w-auto"
         >
           {status === "streaming" ? (
             <>
@@ -488,7 +487,7 @@ export function IntentPicker() {
 
           {(logs.length > 0 || (!initializing && status === "streaming")) && (
             <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              <p className="mezoir-label">
                 Activity
               </p>
               <div
@@ -516,7 +515,7 @@ export function IntentPicker() {
                           <span className="flex min-w-0 flex-1 gap-2 text-[#425466]">
                             {isLast && (
                               <span
-                                className="mt-2 h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#f7931a]"
+                                className="mt-2 h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-[#f4007a]"
                                 aria-hidden
                               />
                             )}
@@ -533,17 +532,17 @@ export function IntentPicker() {
 
           {chainSnapshot && (
             <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              <p className="mezoir-label">
                 Chain state
               </p>
               <div className="mt-4 grid gap-6 sm:grid-cols-2">
-                <div className="border-l-2 border-[#f7931a] pl-4">
+                <div className="border-l-2 border-[#f4007a] pl-4">
                   <p className="text-xs text-[#697386]">Block</p>
                   <p className="mt-1 font-mono text-sm text-[#0a2540]">
                     {chainSnapshot.block_number ?? "unknown"}
                   </p>
                 </div>
-                <div className="border-l-2 border-[#f7931a] pl-4">
+                <div className="border-l-2 border-[#f4007a] pl-4">
                   <p className="text-xs text-[#697386]">Operator</p>
                   <p className="mt-1 font-mono text-sm text-[#0a2540]">
                     {shortAddress(chainSnapshot.operator_address)}
@@ -561,14 +560,14 @@ export function IntentPicker() {
 
           {parsedIntent && (
             <FadeIn className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              <p className="mezoir-label">
                 Parsed intent
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="rounded-full border border-[#f7931a]/20 bg-[#f7931a]/10 px-3 py-1 text-sm font-medium text-[#f7931a]">
+                <span className="rounded-full border border-[#f4007a]/20 bg-[#f4007a]/10 px-3 py-1 text-sm font-medium text-[#f4007a]">
                   {parsedIntent.profile}
                 </span>
-                <span className="rounded-full border border-[#f7931a]/20 bg-[#f7931a]/10 px-3 py-1 text-sm font-medium text-[#f7931a]">
+                <span className="rounded-full border border-[#f4007a]/20 bg-[#f4007a]/10 px-3 py-1 text-sm font-medium text-[#f4007a]">
                   {parsedIntent.priority}
                 </span>
               </div>
@@ -592,7 +591,7 @@ export function IntentPicker() {
                       Decision: {stepLabel}
                     </h3>
                     {!decided && (
-                      <p className="mt-1 text-xs uppercase tracking-[0.08em] text-[#697386]">
+                      <p className="mt-1 mezoir-label">
                         Agent is comparing options
                       </p>
                     )}
@@ -604,14 +603,14 @@ export function IntentPicker() {
                             key={opt.id}
                             className={`relative rounded-xl border-2 p-5 transition-all duration-300 ${
                               chosen
-                                ? "scale-[1.01] border-[#f7931a] shadow-[0_4px_12px_rgba(247,147,26,0.15)]"
+                                ? "scale-[1.01] border-[#f4007a] shadow-[0_4px_16px_rgba(244,0,122,0.2)]"
                                 : decided
                                   ? "border-[#e3e8ee] opacity-50"
                                   : "border-[#e3e8ee]"
                             }`}
                           >
                             {chosen && (
-                              <span className="absolute right-3 top-3 rounded-full bg-[#f7931a] px-2 py-1 text-xs font-medium text-white">
+                              <span className="absolute right-3 top-3 rounded-full bg-[#f4007a] px-2 py-1 text-xs font-medium text-white">
                                 Selected
                               </span>
                             )}
@@ -624,7 +623,7 @@ export function IntentPicker() {
                                   key={`${opt.id}-pro-${i}`}
                                   className="flex gap-2 text-sm text-[#425466]"
                                 >
-                                  <span className="text-[#f7931a]">•</span>
+                                  <span className="text-[#f4007a]">•</span>
                                   <span>{p}</span>
                                 </li>
                               ))}
@@ -660,7 +659,7 @@ export function IntentPicker() {
 
           {actions.length > 0 && (
             <div className="border-b border-[#e3e8ee] p-6 lg:p-8">
-              <p className="mb-4 text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              <p className="mb-4 mezoir-label">
                 Actions
               </p>
               <div className="flex flex-col gap-4">
@@ -672,7 +671,7 @@ export function IntentPicker() {
                     <div className="flex items-start gap-3">
                       {a.started && !a.finished ? (
                         <span
-                          className="mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#f7931a]"
+                          className="mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#f4007a]"
                           aria-label="Executing"
                         />
                       ) : a.success === true ? (
@@ -699,10 +698,10 @@ export function IntentPicker() {
                             href={a.explorer_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-2 inline-flex items-center gap-1 font-mono text-sm text-[#0a2540] hover:text-[#f7931a]"
+                            className="mt-2 inline-flex items-center gap-1 font-mono text-sm text-[#0a2540] hover:text-[#f4007a]"
                           >
                             {shortHash(a.tx_hash)}
-                            <span className="text-[#f7931a]" aria-hidden>
+                            <span className="text-[#f4007a]" aria-hidden>
                               ↗
                             </span>
                           </a>
@@ -731,7 +730,7 @@ export function IntentPicker() {
 
           {explanation && (
             <FadeIn className="p-6 lg:p-8">
-              <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
+              <p className="mezoir-label">
                 Agent&apos;s explanation
               </p>
               <p className="mt-3 rounded-lg bg-[#fafbff] p-6 text-base leading-relaxed text-[#425466]">

@@ -57,7 +57,7 @@ export function Dashboard() {
 
   if (!data) {
     return (
-      <section className="rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm lg:p-8">
+      <section className="mezoir-card p-7 lg:p-9">
         <div className="mb-6 h-3 w-28 animate-pulse rounded bg-[#f1f5f9]" />
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
@@ -89,11 +89,9 @@ export function Dashboard() {
         : "bg-[#697386]/40";
 
   return (
-    <section className="rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm transition-shadow hover:shadow-md lg:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
-          Live positions
-        </h2>
+    <section className="mezoir-card p-7 lg:p-9">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="mezoir-label">Live positions</h2>
         <p className="flex items-center gap-2 font-mono text-xs text-[#697386]">
           {data.data_source != null && (
             <span
@@ -107,23 +105,19 @@ export function Dashboard() {
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8">
-        <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
-            veBTC
-          </p>
-          <p className="text-3xl font-semibold tracking-tight text-[#0a2540] lg:text-4xl">
+      <div className="mt-8 grid grid-cols-2 gap-8 lg:grid-cols-4 lg:gap-10">
+        <div className="group">
+          <p className="mezoir-label mb-3">veBTC</p>
+          <p className="text-3xl font-semibold tabular-nums tracking-tight text-[#0a2540] transition-transform duration-300 group-hover:scale-[1.02] lg:text-4xl">
             {data.btc_positions}
           </p>
           <p className="mt-1 text-sm text-[#425466]">
             {Number(data.btc_total_locked ?? 0).toFixed(4)} BTC locked
           </p>
         </div>
-        <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
-            veMEZO
-          </p>
-          <p className="text-3xl font-semibold tracking-tight text-[#0a2540] lg:text-4xl">
+        <div className="group">
+          <p className="mezoir-label mb-3">veMEZO</p>
+          <p className="text-3xl font-semibold tabular-nums tracking-tight text-[#0a2540] transition-transform duration-300 group-hover:scale-[1.02] lg:text-4xl">
             {data.mezo_positions}
           </p>
           <p className="mt-1 text-sm text-[#425466]">
@@ -131,18 +125,14 @@ export function Dashboard() {
           </p>
         </div>
         <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
-            Active votes
-          </p>
+          <p className="mezoir-label mb-3">Active votes</p>
           <p className="text-3xl font-semibold tracking-tight text-[#0a2540] lg:text-4xl">
             {data.active_votes.length}
           </p>
           <p className="mt-1 truncate text-sm text-[#425466]">{gaugeLabel}</p>
         </div>
         <div>
-          <p className="mb-2 text-xs uppercase tracking-[0.08em] text-[#697386]">
-            Operator
-          </p>
+          <p className="mezoir-label mb-3">Operator</p>
           <p className="font-mono text-xl font-semibold tracking-tight text-[#0a2540] lg:text-2xl">
             {data.operator_address?.slice(0, 6)}…{data.operator_address?.slice(-4)}
           </p>
@@ -152,9 +142,7 @@ export function Dashboard() {
 
       {data.active_votes.length > 0 && (
         <div className="mt-6 border-t border-[#e3e8ee] pt-6">
-          <p className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
-            Vote allocations
-          </p>
+          <p className="mezoir-label">Vote allocations</p>
           <ul className="mt-3 divide-y divide-[#e3e8ee]">
             {data.active_votes.map((v) => (
               <li
@@ -169,10 +157,10 @@ export function Dashboard() {
                   href={EXPLORER}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 font-mono text-sm text-[#0a2540] transition-colors hover:text-[#f7931a]"
+                  className="inline-flex items-center gap-1 font-mono text-sm text-[#0a2540] transition-colors hover:text-[#f4007a]"
                 >
                   {formatMezo(v.weight_wei)} wt
-                  <span className="text-[#f7931a]" aria-hidden>
+                  <span className="text-[#f4007a]" aria-hidden>
                     ↗
                   </span>
                 </a>
@@ -184,3 +172,4 @@ export function Dashboard() {
     </section>
   );
 }
+

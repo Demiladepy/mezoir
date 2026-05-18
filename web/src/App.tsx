@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 
 import { Dashboard } from "@/components/dashboard";
 import { Header } from "@/components/header";
+import { Reveal } from "@/components/motion";
 import { Web3Provider } from "@/components/providers/web3-provider";
 
 const WalletHome = lazy(() =>
@@ -11,15 +12,30 @@ const WalletHome = lazy(() =>
 export default function App() {
   return (
     <Web3Provider>
-      <div className="min-h-screen bg-[#fafbff] font-sans text-[#0a2540]">
+      <div className="mezoir-page-bg relative min-h-screen overflow-x-hidden font-sans text-[#0a2540]">
+        <div
+          aria-hidden
+          className="mezoir-glow-orb pointer-events-none fixed -left-32 top-24 h-72 w-72 rounded-full bg-[#f4007a]/10 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="mezoir-glow-orb pointer-events-none fixed -right-24 top-1/3 h-80 w-80 rounded-full bg-blue-400/10 blur-3xl"
+          style={{ animationDelay: "-4s" }}
+        />
+
         <Header />
-        <main className="mx-auto w-full max-w-6xl space-y-8 px-4 pb-16 pt-8 lg:space-y-12 lg:px-8">
-          <Dashboard />
+
+        <main className="relative mx-auto w-full max-w-6xl space-y-10 px-4 pb-20 pt-10 lg:space-y-14 lg:px-8 lg:pt-12">
+          <Reveal delay={80}>
+            <Dashboard />
+          </Reveal>
           <Suspense
             fallback={
-              <div className="rounded-2xl border border-[#e3e8ee] bg-white py-12 text-center text-sm text-[#697386] shadow-sm">
-                Loading wallet…
-              </div>
+              <Reveal delay={120}>
+                <div className="mezoir-card py-16 text-center text-sm text-[#697386]">
+                  Loading wallet…
+                </div>
+              </Reveal>
             }
           >
             <WalletHome />
@@ -29,3 +45,4 @@ export default function App() {
     </Web3Provider>
   );
 }
+

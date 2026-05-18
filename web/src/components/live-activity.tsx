@@ -84,12 +84,10 @@ export function LiveActivity() {
   const valid = rows.filter(isValidPosition);
 
   return (
-    <section className="rounded-2xl border border-[#e3e8ee] bg-white p-6 shadow-sm lg:p-8">
-      <div className="mb-4">
-        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-[#697386]">
-          Recent positions
-        </h2>
-        <p className="mt-1 text-sm text-[#425466]">
+    <section className="mezoir-card p-7 lg:p-9">
+      <div className="mb-6">
+        <h2 className="mezoir-label">Recent positions</h2>
+        <p className="mt-2 text-sm leading-relaxed text-[#425466]">
           On-chain reads · token IDs 1–5 · 30s refresh
         </p>
       </div>
@@ -105,10 +103,10 @@ export function LiveActivity() {
             {valid.map((row) => (
               <article
                 key={row.token_id}
-                className="rounded-xl border border-[#e3e8ee] p-4 transition-all duration-200 hover:shadow-md"
+                className="rounded-xl border border-[#e3e8ee] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#f4007a]/20 hover:shadow-[0_8px_24px_rgba(10,37,64,0.08)]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-[0.08em] text-[#697386]">
+                  <span className="mezoir-label">
                     Token
                   </span>
                   <span className="font-mono text-sm font-medium text-[#0a2540]">
