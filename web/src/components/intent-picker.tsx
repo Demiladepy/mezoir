@@ -2,10 +2,25 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AGENT_URL } from "@/lib/agent-url";
 
 const PRESET_INTENTS = [
-  "Maximize my BTC yield",
-  "I'm MEZO-heavy, optimize voting returns",
-  "Balanced: optimize across both",
-  "Park me defensively",
+  { label: "Maximize my BTC yield", value: "Maximize my BTC yield" },
+  {
+    label: "I'm MEZO-heavy, optimize voting returns",
+    value: "I'm MEZO-heavy, optimize voting returns",
+  },
+  { label: "Balanced: optimize across both", value: "Balanced: optimize across both" },
+  { label: "Park me defensively", value: "Park me defensively" },
+  {
+    label: "Conservative — defensive lock, max capital flexibility",
+    value: "defensive lock, minimize risk, keep flexibility",
+  },
+  {
+    label: "Yield Farmer — max lock duration, max emissions",
+    value: "yield farmer, max lock, maximum boost",
+  },
+  {
+    label: "Diversifier — spread across both assets, moderate duration",
+    value: "just diversify, spread evenly, moderate exposure",
+  },
 ] as const;
 
 const fieldClass =
@@ -13,7 +28,14 @@ const fieldClass =
 
 interface ParsedIntent {
   raw: string;
-  profile: "btc_heavy" | "mezo_heavy" | "balanced" | "defensive";
+  profile:
+    | "btc_heavy"
+    | "mezo_heavy"
+    | "balanced"
+    | "defensive"
+    | "defensive_lock"
+    | "yield_farmer"
+    | "just_diversify";
   priority: "yield" | "safety" | "voting_returns";
 }
 
@@ -319,7 +341,7 @@ function attachStreamHandlers(
 }
 
 export function IntentPicker() {
-  const [intent, setIntent] = useState<string>(PRESET_INTENTS[0]);
+  const [intent, setIntent] = useState<string>(PRESET_INTENTS[0].value);
   const [amountBtc, setAmountBtc] = useState(0.001);
   const [status, setStatus] = useState<"idle" | "streaming" | "done" | "error">(
     "idle",
@@ -443,8 +465,8 @@ export function IntentPicker() {
               className={fieldClass}
             >
               {PRESET_INTENTS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
+                <option key={s.value} value={s.value}>
+                  {s.label}
                 </option>
               ))}
             </select>

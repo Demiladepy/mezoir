@@ -194,6 +194,11 @@ async def get_dashboard():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@app.get("/agent/activity")
+async def get_activity():
+    return await asyncio.to_thread(goldsky.get_recent_activity, 5)
+
+
 async def _build_dashboard() -> dict:
     operator = os.getenv("AGENT_OPERATOR_ADDRESS", "").strip()
     if operator:

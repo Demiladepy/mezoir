@@ -29,6 +29,21 @@ PROFILE_PARAMS = {
         "mezo_days": 0,
         "rationale": "Minimum BTC lock for low risk",
     },
+    "defensive_lock": {
+        "btc_days": 7,
+        "mezo_days": 30,
+        "rationale": "Conservative position with minimum BTC and short MEZO lock — maximizes capital flexibility",
+    },
+    "yield_farmer": {
+        "btc_days": 28,
+        "mezo_days": 1460,
+        "rationale": "Maximum lock duration on both assets for the highest voting weight and emissions allocation — locks capital for up to 4 years",
+    },
+    "just_diversify": {
+        "btc_days": 14,
+        "mezo_days": 180,
+        "rationale": "Spread capital across both veBTC and veMEZO at moderate durations — neither yield-maxed nor flexible-maxed",
+    },
 }
 
 

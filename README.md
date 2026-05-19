@@ -11,6 +11,7 @@ Mezo Hackathon 2026 · MEZO Track
 | **Agent API** | [mezoir-1.onrender.com](https://mezoir-1.onrender.com) |
 | **Explorer** | [explorer.test.mezo.org](https://explorer.test.mezo.org) |
 | **Network** | Mezo testnet (Matsnet) |
+| **Demo video** | [Coming soon] |
 
 ---
 
@@ -44,6 +45,9 @@ Mezo Hackathon 2026 · MEZO Track
 | I'm MEZO-heavy, optimize voting returns | `mezo_heavy` |
 | Balanced: optimize across both | `balanced` |
 | Park me defensively | `defensive` |
+| Conservative — defensive lock, max flexibility | `defensive_lock` |
+| Yield Farmer — max lock, max emissions | `yield_farmer` |
+| Diversifier — spread across both assets | `just_diversify` |
 
 **Why it exists** — Mezo's ve stack (veBTC, veMEZO, gauges, epochs) is powerful but heavy. Mezoir collapses that into one sentence: *what do you want?*
 
@@ -87,7 +91,7 @@ flowchart TB
 | **Web** | UI, wallet connect, live dashboard, SSE consumer |
 | **Agent** | Intent parse, strategy, LLM rationale, tx execution |
 | **Goldsky** | Fast dashboard aggregates (RPC fallback if unset) |
-| **Contracts** | Mock veBTC / veMEZO / gauge on Matsnet |
+| **Contracts** | Canonical veBTC (`0x38E3…130a`), canonical veMEZO (`0xaCE8…111b`), MockGauge (`0x6E60…bc40`) on Matsnet |
 
 ---
 
@@ -97,7 +101,7 @@ flowchart TB
 mezoir/
 ├── web/                 # Vite + React frontend (Vercel)
 ├── agent/               # FastAPI agent service (Render)
-├── contracts/           # Foundry — MockVeBTC, MockVeMEZO, MockGauge
+├── contracts/           # Foundry — MockGauge (active); MockVeBTC/MockVeMEZO retained for local dev parity
 ├── mezoir-subgraph/     # Goldsky subgraph (positions + votes)
 └── docs/
     ├── system-design.excalidraw
@@ -156,7 +160,7 @@ npm run dev
 |----------|---------|
 | `VITE_AGENT_URL` | Agent base URL (e.g. `http://localhost:8001`) |
 | `VITE_WALLETCONNECT_PROJECT_ID` | [Reown Cloud](https://cloud.reown.com) |
-| `VITE_VEBTC_PROXY_ADDRESS` | Shown in footer |
+| `VITE_VEBTC_PROXY_ADDRESS` | Optional — not displayed in current UI |
 
 Open **http://localhost:5173** → Connect wallet → Run agent.
 
@@ -193,9 +197,9 @@ cp .env.example .env
 | Layer | Tech |
 |-------|------|
 | Frontend | Vite, React 18, Tailwind, Mezo Passport, RainbowKit |
-| Agent | Python 3.11, FastAPI, LangGraph, web3.py, Claude |
+| Agent | Python 3.11, FastAPI, web3.py v7, Anthropic Claude SDK |
 | Indexing | Goldsky subgraph (`mezoir-subgraph/`) |
-| Chain | Mezo testnet, MockVeBTC / MockVeMEZO / MockGauge |
+| Chain | Mezo testnet — canonical veBTC + veMEZO, MockGauge (real Mezo gauge integration scaffolded for v0.2) |
 | Deploy | Vercel (web) · Render (agent) |
 
 ---
@@ -216,3 +220,24 @@ cp .env.example .env
 Built April–May 2026 on **Mezo Matsnet**. Testnet demo — not financial advice.
 
 Built on Mezo primitives: Matchbox, veBTC, veMEZO, gauges. Thanks to the Mezo team and community for hackathon support.
+
+---
+
+## Hackathon eligibility
+
+**Main track entry:** MEZO Utilization Track. Mezoir builds utility for MEZO tokens via veMEZO locking + gauge voting + agent-driven governance — directly addressing the track's "AI agent payments in MEZO" and "Governance & DAO tools" focus areas.
+
+**Sponsor-track integrations claimed:**
+
+| Sponsor | What Mezoir uses | Where to verify |
+|---------|------------------|-----------------|
+| **Validation Cloud** | Dedicated Mezo RPC endpoint replacing public-rate-limited RPC for all agent reads + tx broadcasts | `agent/.env`: `MEZO_TESTNET_RPC_URL`; agent service running at [mezoir-1.onrender.com](https://mezoir-1.onrender.com) |
+| **Goldsky** | Live subgraph indexing Deposit + Voted events on canonical veBTC, veMEZO, and MockGauge. Powers the dashboard's recent activity feed and live positions (sub-second response vs RPC's ~10 eth_calls per refresh). | Subgraph deployed at `mezoir/0.0.2`; query path in `agent/app/services/goldsky.py`; mapping logic in `mezoir-subgraph/` |
+
+**Scaffolded for future:** Tenderly transaction simulation — Mezo testnet not currently on Tenderly's supported chains list; integration architecture is in place and ready when chain support arrives.
+
+---
+
+## Why this fits the Mezo Foundation's 2026 direction
+
+The Supernormal Foundation's 2026 roadmap explicitly names "agent economy infrastructure" and veNFT primitives as priorities for BitcoinFi. Mezoir is exactly that: an agent that operates against the ve-economy's primitives (veBTC, veMEZO, gauges) with deliberation visible to the user — the foundational shape of how autonomous BitcoinFi agents will work.

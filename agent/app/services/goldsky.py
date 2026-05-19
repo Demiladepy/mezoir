@@ -116,3 +116,75 @@ def try_dashboard_from_subgraph(operator_address: str) -> dict[str, Any] | None:
         }
     except Exception:
         return None
+
+
+def get_recent_activity(limit: int = 5) -> dict[str, list[dict[str, Any]]]:
+    """
+    Query Goldsky subgraph for recent activity across the network.
+    Returns recent locks (Deposit events) and recent votes.
+    """
+    if not SUBGRAPH_URL:
+        return {"locks": [], "votes": []}
+
+    query = """
+    query GetRecentActivity($limit: Int!) {
+      vePositions(first: $limit, orderBy: createdAt, orderDirection: desc, where: {active: true}) {
+        id
+        contract
+        tokenId
+        owner
+        amount
+        unlockTime
+        createdAt
+      }
+      voteCasts(first: $limit, orderBy: timestamp, orderDirection: desc) {
+        id
+        tokenId
+        gauge
+        voter
+        weight
+        timestamp
+      }
+    }
+    """
+
+    try:
+        response = requests.post(
+            SUBGRAPH_URL,
+            json={"query": query, "variables": {"limit": limit}},
+            timeout=5,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        body = response.json()
+        if body.get("errors"):
+            print(f"get_recent_activity graphql errors: {body.get('errors')}")
+            return {"locks": [], "votes": []}
+        data = body.get("data") or {}
+        return {
+            "locks": [
+                {
+                    "id": p["id"],
+                    "contract": p["contract"],
+                    "token_id": int(p["tokenId"]),
+                    "owner": p["owner"],
+                    "amount": float(int(p["amount"]) / 1e18),
+                    "unlock_time": int(p["unlockTime"]),
+                    "created_at": int(p["createdAt"]),
+                }
+                for p in data.get("vePositions", [])
+            ],
+            "votes": [
+                {
+                    "token_id": int(v["tokenId"]),
+                    "gauge": v["gauge"],
+                    "voter": v["voter"],
+                    "weight": v["weight"],
+                    "timestamp": int(v["timestamp"]),
+                }
+                for v in data.get("voteCasts", [])
+            ],
+        }
+    except Exception as e:
+        print(f"get_recent_activity failed: {e}")
+        return {"locks": [], "votes": []}

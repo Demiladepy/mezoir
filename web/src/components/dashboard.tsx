@@ -15,6 +15,33 @@ interface DashboardData {
   data_source?: "goldsky" | "rpc";
 }
 
+interface ActivityLock {
+  id: string;
+  contract: string;
+  token_id: number;
+  owner: string;
+  amount: number;
+  unlock_time: number;
+  created_at: number;
+}
+
+interface ActivityVote {
+  token_id: number;
+  gauge: string;
+  voter: string;
+  weight: string;
+  timestamp: number;
+}
+
+interface ActivityData {
+  locks: ActivityLock[];
+  votes: ActivityVote[];
+}
+
+type ActivityItem =
+  | { kind: "lock"; ts: number; lock: ActivityLock }
+  | { kind: "vote"; ts: number; vote: ActivityVote };
+
 function StatSkeleton() {
   return (
     <div className="animate-pulse rounded-2xl bg-[#fafafa] p-4">
@@ -25,28 +52,158 @@ function StatSkeleton() {
   );
 }
 
-export function Dashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+function shortAddress(addr: string) {
+  if (addr.length < 12) return addr;
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+}
+
+function formatRelativeTime(ts: number) {
+  const now = Math.floor(Date.now() / 1000);
+  const diff = Math.max(0, now - ts);
+  if (diff < 60) return `${diff || 1}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function mergeActivity(data: ActivityData | null, limit = 7): ActivityItem[] {
+  if (!data) return [];
+  const items: ActivityItem[] = [
+    ...data.locks.map((lock) => ({ kind: "lock" as const, ts: lock.created_at, lock })),
+    ...data.votes.map((vote) => ({ kind: "vote" as const, ts: vote.timestamp, vote })),
+  ];
+  return items.sort((a, b) => b.ts - a.ts).slice(0, limit);
+}
+
+function activitySummary(item: ActivityItem) {
+  if (item.kind === "lock") {
+    const asset = item.lock.contract === "veMEZO" ? "MEZO" : "BTC";
+    return (
+      <>
+        <span aria-hidden>🔒</span>
+        <span>
+          {shortAddress(item.lock.owner)} locked {item.lock.amount.toFixed(4)} ve
+          {asset} #{item.lock.token_id}
+        </span>
+      </>
+    );
+  }
+
+  const weight = (Number(item.vote.weight) / 1e18).toFixed(4);
+  return (
+    <>
+      <span aria-hidden>🗳️</span>
+      <span>
+        {shortAddress(item.vote.voter)} voted with veMEZO #{item.vote.token_id} (
+        {weight} weight)
+      </span>
+    </>
+  );
+}
+
+function RecentActivityPanel() {
+  const [activity, setActivity] = useState<ActivityData | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [secondsAgo, setSecondsAgo] = useState(0);
 
   useEffect(() => {
-    const fetchData = async () => {
+    let cancelled = false;
+
+    const fetchActivity = async () => {
+      setFetching(true);
       try {
-        const res = await fetch(`${AGENT_URL}/agent/dashboard`);
+        const res = await fetch(`${AGENT_URL}/agent/activity`);
         if (!res.ok) throw new Error(`${res.status}`);
-        const json = (await res.json()) as DashboardData;
-        setData(json);
-        setError(null);
+        const json = (await res.json()) as ActivityData;
+        if (!cancelled) {
+          setActivity(json);
+          setLastUpdated(new Date());
+        }
       } catch {
-        setError("Couldn't reach agent");
+        if (!cancelled) {
+          setActivity({ locks: [], votes: [] });
+          setLastUpdated(new Date());
+        }
+      } finally {
+        if (!cancelled) setFetching(false);
       }
     };
 
-    fetchData();
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
+    fetchActivity();
+    const interval = setInterval(fetchActivity, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
+  useEffect(() => {
+    if (!lastUpdated) return;
+    const update = () =>
+      setSecondsAgo(Math.max(0, Math.floor((Date.now() - lastUpdated.getTime()) / 1000)));
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [lastUpdated]);
+
+  const items = mergeActivity(activity);
+  const updatedLabel =
+    lastUpdated != null ? `Updated ${secondsAgo}s ago` : "Updating…";
+
+  return (
+    <section className="mezo-card mt-6 p-8 transition-shadow duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] lg:p-10">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-sm font-medium uppercase tracking-[0.1em] text-black">
+          Recent activity across Mezo Earn
+        </h2>
+        <div className="flex items-center gap-2 text-xs text-[#737373]">
+          <span
+            className={`h-1.5 w-1.5 rounded-full bg-emerald-500 ${fetching ? "animate-pulse" : ""}`}
+            aria-hidden
+          />
+          <span>{updatedLabel}</span>
+        </div>
+      </div>
+
+      <div className="mt-6 max-h-72 overflow-y-auto">
+        {items.length === 0 ? (
+          <p className="animate-pulse py-6 text-center text-sm text-[#737373]">
+            Waiting for activity…
+          </p>
+        ) : (
+          <ul>
+            {items.map((item, i) => (
+              <li
+                key={
+                  item.kind === "lock"
+                    ? `lock-${item.lock.id}`
+                    : `vote-${item.vote.token_id}-${item.vote.timestamp}-${i}`
+                }
+                className="flex items-center justify-between gap-4 border-b border-[#e5e5e5] py-2 last:border-0"
+              >
+                <div className="flex min-w-0 items-center gap-2 text-sm text-[#525252]">
+                  {activitySummary(item)}
+                </div>
+                <span className="shrink-0 text-xs text-[#737373]">
+                  {formatRelativeTime(item.ts)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PositionsPanel({
+  data,
+  error,
+}: {
+  data: DashboardData | null;
+  error: string | null;
+}) {
   if (error) {
     return (
       <div className="rounded-3xl border border-red-200 bg-red-50 px-6 py-4 text-center text-sm text-red-700">
@@ -184,5 +341,35 @@ export function Dashboard() {
         </div>
       )}
     </section>
+  );
+}
+
+export function Dashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`${AGENT_URL}/agent/dashboard`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const json = (await res.json()) as DashboardData;
+        setData(json);
+        setError(null);
+      } catch {
+        setError("Couldn't reach agent");
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      <PositionsPanel data={data} error={error} />
+      <RecentActivityPanel />
+    </>
   );
 }
